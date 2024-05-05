@@ -1,5 +1,6 @@
 ---
-title: "No effect of partial reinforcement on fear extinction learning and memory in C57BL/6J mice"
+title: 'Su et al., (2024): No effect of partial reinforcement on fear extinction learning
+  and memory in C57BL/6J mice'
 author: "Su CJ, Fukunaga Y, Penna SR, Cazares VA"
 date: "2024-05-05"
 output: html_document
