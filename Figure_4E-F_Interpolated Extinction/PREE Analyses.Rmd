@@ -1,0 +1,373 @@
+---
+title: "Su et al., (2024): Figure 4D-F"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+# Load packages
+
+```{r include=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(afex)
+library(emmeans)
+library(pwr2)
+library(rstatix)
+library(viridis)
+```
+
+# Fig 4. Testing effect of interpolated extinction (A-C) and less fear training (D-F) on FE
+We attempted to stimulate a PREE using an interpolated extinction session (Fig. 4D). We based this approach on a previous study which inflated the PREE by interpolating a block of non-reinforced trials (20 CSs) in the conditioning phase with the rationale of enhancing the effect of nonreinforcement (Hilton 1969). 
+
+# Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+```{r}
+# df ---------------------------------------------------
+
+list.files(pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(".", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+# delete the metadata from the list.filenames
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*CR.csv$"), 15,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*PR.csv$"), 18,
+                                             ifelse(str_detect(list.filenames[[i]], "IPE"), 32,
+                                                    ifelse(str_detect(list.filenames[[i]], "E1"), 24,
+                                                           ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                  24)))))
+  )
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 29, -5)
+
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>% #collapse separate items in list into one
+  separate(col=ExpDetails, into = c("Exp_Date", "Exp_Type", "Exp_Room", "Exp_Sched"), sep = "_") %>% 
+  separate(col=Group, into = c("R_Schedule", "Interpolated"), sep = "_") %>% 
+  mutate(id = Animal) %>% 
+  separate(col = Animal, into = c("Strain", "Sex", "Cage", "Chamber"), sep = "-")
+
+# Conver list into a dataframe
+df<-as.data.frame(list.data)
+
+rm(list=setdiff(ls(), "df"))
+# df<- df %>% 
+#   drop_na(Trial, Strain, Experiment)  
+
+#write_csv(df, "220803_PREE_df.csv")
+```
+
+## E. Fear Acquisition
+
+### E - Dataframe
+```{r}
+FC_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "FC")) %>% 
+  group_by(id, R_Schedule, Interpolated) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n()))) %>% 
+  na.omit()
+
+#write_csv(FC_id, "220803_PREE_FC_id.csv")
+
+FC_ave_1 <- FC_id_1 %>% 
+  group_by(R_Schedule, Interpolated) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+#write_csv(FC_ave, "220803_PREE_FC_ave.csv")
+
+```
+
+### E - Graph
+```{r}
+ggplot(FC_ave_1,
+       aes(x=Interpolated,
+           y=group_mean_freezing, 
+           group=interaction(R_Schedule, Interpolated),
+           color=R_Schedule,
+           fill=R_Schedule,
+           shape=Interpolated)) +
+  scale_fill_viridis(discrete = TRUE) +
+  scale_colour_viridis(discrete = TRUE) +
+  geom_bar(
+    stat = "identity",
+    position = "dodge",
+    width=0.8,
+    alpha=0.4,
+    color=NA) + 
+  geom_errorbar(
+    aes(
+      ymin = group_mean_freezing-se,
+      ymax = group_mean_freezing+se,
+      width = .2),
+    position=position_dodge(width=0.8)
+  ) +
+  geom_point(
+    data=FC_id_1,
+    aes(x=Interpolated, y=mean_freezing), 
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=3
+  ) +
+  ylim(0,100) +
+  theme_bw() + 
+  theme(legend.text=element_text(size=18),
+        legend.title = element_text(size=18),
+        legend.position = "top",
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 18, color="black"),
+        axis.text.y = element_text(size = 18, color="black"),
+        axis.title.x = element_text(size = 18, face= "bold"),
+        axis.title.y = element_text(size = 18, face="bold"),
+        axis.line.x = element_line(color="black", size = 1),
+        axis.line.y = element_line(color="black", size = 1),
+        strip.text = element_text(size = 18)) + 
+  labs(
+    x = "Interpolated Extinction",
+    y = "% Time Freezing")
+```
+
+### E - Stats
+Sex was originally in the statistical model: mean_freezing ~ Contingency (2) X CS_time (2) X Sex (2). However, considering broad lack of sex-specific effects, it was dropped from models.
+```{r}
+m4e <- FC_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("R_Schedule", "Interpolated"),
+         data = .)
+
+#ANOVA table
+nice_m4e <-nice(m4e)
+kable(nice_m4e, caption = '<b>Figure 4E: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+```
+
+## F. Extinction Acquisition
+Explain this graph
+
+### F - Tidy dataframe
+```{r}
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Experiment, "E"),
+         str_detect(Experiment, "IPE", negate = TRUE)) %>% 
+  mutate(Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                      ifelse(Component.Name %in% bin1, "1",
+                             ifelse(Component.Name %in% bin2, "2",
+                                    ifelse(Component.Name %in% bin3, "3",
+                                           ifelse(Component.Name %in% bin4, "4", "Post")))))) %>% 
+  group_by(Exp_Type, id, R_Schedule, Interpolated, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Exp_Type, R_Schedule, Interpolated, Bin) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+
+```
+
+### F - Graph
+```{r}
+ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=Bin,
+      y=group_mean_freezing,
+      group = interaction(R_Schedule, Interpolated),
+      color = R_Schedule,
+      fill = R_Schedule,
+      shape=Interpolated)) +
+  scale_fill_viridis(discrete = TRUE) +
+  scale_colour_viridis(discrete = TRUE) +
+  facet_wrap(
+    vars(Exp_Type)
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  geom_line(aes(linetype= Interpolated)
+  ) + 
+  ylim(0,100) +
+  geom_ribbon(
+    aes(
+      ymin = group_mean_freezing-se,
+      ymax = group_mean_freezing+se),
+    alpha = .2,
+    color = NA
+  ) +
+  theme_bw() +
+  theme(legend.text=element_text(size=18),
+        legend.title = element_text(size=18),
+        legend.position = "top",
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 10, color="black", angle = 45),
+        axis.text.y = element_text(size = 18, color="black"),
+        axis.title.x = element_text(size = 18, face= "bold"),
+        axis.title.y = element_text(size = 18, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1),
+        strip.text = element_text(size = 18)) + 
+  labs(
+    x = "Bin",
+    y = "% Time Freezing")
+
+```
+
+### F - Stats (ANOVA statistical analyses are represented in figs 1D-E )
+```{r}
+###### FE1 ############
+m4c <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("R_Schedule", "Interpolated"),
+         within = c("Bin"),
+         data = .)
+
+#ANOVA table
+nice_m4c <-nice(m4c)
+kable(nice_m4c, caption = '<b>Figure 4F: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Simple contrasts for Contingency
+n4c <- emmeans(m4c, ~ Interpolated*Bin)
+n4c_pairs <- pairs(n4c, simple="each")
+n4c_pairs
+
+kable(n4c_pairs[1], caption = '<b>Figure 4F: Simple Contrasts for Interpolated CS</b>')
+kable(n4c_pairs[2], caption = '<b>Figure 4F: Simple Contrasts for CS-Bin CS</b>')
+
+n4c_pairs
+```
+
+## Not Shown Interpolated extinction session
+Explain this graph
+
+### Not Shown - Tidy dataframe
+```{r}
+bin1 =c("tone 01", "tone 02", "tone 03", "tone 04", "tone 05")
+bin2 =c("tone 06", "tone 07", "tone 08", "tone 09","tone 10")
+bin3 =c("tone 11", "tone 12","tone 13", "tone 14", "tone 15" )
+bin4 =c("tone 16", "tone 17","tone 18", "tone 19", "tone 20" )
+
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Experiment, "IPE"),
+         str_detect(Experiment, "E1", negate = TRUE)) %>% 
+  mutate(Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                      ifelse(Component.Name %in% bin1, "1",
+                             ifelse(Component.Name %in% bin2, "2",
+                                    ifelse(Component.Name %in% bin3, "3",
+                                           ifelse(Component.Name %in% bin4, "4", "Post")))))) %>% 
+  group_by(Exp_Type, id, R_Schedule, Interpolated, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Exp_Type, R_Schedule, Interpolated, Bin) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+
+```
+
+### Not Shown - Graph
+```{r}
+ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=Bin,
+      y=group_mean_freezing,
+      group = interaction(R_Schedule, Interpolated),
+      color = R_Schedule,
+      fill = R_Schedule,
+      shape=Interpolated)) +
+  scale_fill_viridis(discrete = TRUE) +
+  scale_colour_viridis(discrete = TRUE) +
+  facet_wrap(
+    vars(Exp_Type)
+  ) +
+  geom_point(
+    size = 3
+  ) +
+  geom_line(
+  ) + 
+  ylim(0,100) +
+  geom_ribbon(
+    aes(
+      ymin = group_mean_freezing-se,
+      ymax = group_mean_freezing+se),
+    alpha = .2,
+    color = NA
+  ) +
+  theme_bw() +
+  theme(legend.text=element_text(size=18),
+        legend.title = element_text(size=18),
+        legend.position = "top",
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 10, color="black", angle = 45),
+        axis.text.y = element_text(size = 18, color="black"),
+        axis.title.x = element_text(size = 18, face= "bold"),
+        axis.title.y = element_text(size = 18, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1),
+        strip.text = element_text(size = 18)) + 
+  labs(
+    x = "Bin",
+    y = "% Time Freezing")
+
+```
+
+<!-- ### Not Shown - Stats (ANOVA statistical analyses are represented in figs 1D-E ) -->
+<!-- Animals in the No interpolated CS group were placed in chamber for the same period but were not expose to any CS-tones. The data displayed shows the CS-tone period for each group whether or not the mice were exposed to tones.  -->
+<!-- ```{r} -->
+<!-- ###### FE1 ############ -->
+<!-- m1d.FE <- EXT_bin_id_1 %>% -->
+<!--   filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>% -->
+<!--   # filter(Exp_Type == "E1") %>%  -->
+<!--   aov_ez(id = "id", -->
+<!--          dv = "mean_freezing", -->
+<!--          between = c("Contingency", "CS_Time"), -->
+<!--          within = c("Bin", "Exp_Type"), -->
+<!--          # covariate = "Exp_Type", factorize=FALSE, -->
+<!--          data = .) -->
+
+<!-- m1d.FE -->
+
+<!-- n1d <- emmeans(m1d.FE, ~ Contingency* Exp_Type * CS_Time * Bin) -->
+<!-- pairs(n1d, simple="each") -->
+
+
+<!-- ``` -->
+
+
+
+

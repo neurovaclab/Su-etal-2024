@@ -1,0 +1,762 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Su et al., (2024): Figure 4D-F},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Su et al., (2024): Figure 4D-F}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\hypertarget{load-packages}{%
+\section{Load packages}\label{load-packages}}
+
+\hypertarget{load-and-tidy-data}{%
+\section{Load and tidy data}\label{load-and-tidy-data}}
+
+Data was exported from VideoFreeze as CSV files. The header rows of the
+raw CSV files contain information regarding how the data was exported
+(ie how data was segmented into bins as well as what motion index
+threshold was used as a cut-off for assessing freezing).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# df {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\FunctionTok{list.files}\NormalTok{(}\AttributeTok{pattern=}\StringTok{".csv$"}\NormalTok{, }\AttributeTok{recursive =} \ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1] "PREE_INTERPOLATE/PREE #16/2024-03-30_FC1_R1_CR.csv"
+##  [2] "PREE_INTERPOLATE/PREE #16/2024-03-30_FC1_R1_PR.csv"
+##  [3] "PREE_INTERPOLATE/PREE #16/2024-03-30_FC1_R2_CR.csv"
+##  [4] "PREE_INTERPOLATE/PREE #16/2024-03-30_FC1_R2_PR.csv"
+##  [5] "PREE_INTERPOLATE/PREE #16/2024-03-31_IPE_R1_NA.csv"
+##  [6] "PREE_INTERPOLATE/PREE #16/2024-03-31_IPE_R2_NA.csv"
+##  [7] "PREE_INTERPOLATE/PREE #16/2024-04-01_FC2_R1_CR.csv"
+##  [8] "PREE_INTERPOLATE/PREE #16/2024-04-01_FC2_R1_PR.csv"
+##  [9] "PREE_INTERPOLATE/PREE #16/2024-04-01_FC2_R2_CR.csv"
+## [10] "PREE_INTERPOLATE/PREE #16/2024-04-01_FC2_R2_PR.csv"
+## [11] "PREE_INTERPOLATE/PREE #16/2024-04-02_E1_R1_NA.csv" 
+## [12] "PREE_INTERPOLATE/PREE #16/2024-04-02_E1_R2_NA.csv"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{list.filenames }\OtherTok{\textless{}{-}} \FunctionTok{list.files}\NormalTok{(}\StringTok{"."}\NormalTok{, }\AttributeTok{pattern =} \StringTok{".csv$"}\NormalTok{, }
+                             \AttributeTok{full.names=}\ConstantTok{TRUE}\NormalTok{, }\AttributeTok{recursive =} \ConstantTok{TRUE}\NormalTok{)}
+\CommentTok{\# delete the metadata from the list.filenames}
+\NormalTok{list.data }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{()}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(list.filenames)) \{}
+\NormalTok{  list.data[[i]] }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(list.filenames[[i]], }\AttributeTok{skip=}
+                               \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(list.filenames[[i]], }\StringTok{"FC}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{w*CR.csv$"}\NormalTok{), }\DecValTok{15}\NormalTok{,}
+                                      \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(list.filenames[[i]], }\StringTok{"FC}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{w*PR.csv$"}\NormalTok{), }\DecValTok{18}\NormalTok{,}
+                                             \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(list.filenames[[i]], }\StringTok{"IPE"}\NormalTok{), }\DecValTok{32}\NormalTok{,}
+                                                    \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(list.filenames[[i]], }\StringTok{"E1"}\NormalTok{), }\DecValTok{24}\NormalTok{,}
+                                                           \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(list.filenames[[i]], }\StringTok{"SR"}\NormalTok{), }\DecValTok{16}\NormalTok{,}
+                                                                  \DecValTok{24}\NormalTok{)))))}
+\NormalTok{  )}
+\NormalTok{  list.data[[i]]}\SpecialCharTok{$}\NormalTok{ExpDetails }\OtherTok{\textless{}{-}} \FunctionTok{str\_sub}\NormalTok{(list.filenames[[i]], }\DecValTok{29}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{5}\NormalTok{)}
+
+\NormalTok{\}}
+
+\NormalTok{list.data }\OtherTok{\textless{}{-}}\NormalTok{ list.data }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{reduce}\NormalTok{(full\_join) }\SpecialCharTok{\%\textgreater{}\%} \CommentTok{\#collapse separate items in list into one}
+  \FunctionTok{separate}\NormalTok{(}\AttributeTok{col=}\NormalTok{ExpDetails, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"Exp\_Date"}\NormalTok{, }\StringTok{"Exp\_Type"}\NormalTok{, }\StringTok{"Exp\_Room"}\NormalTok{, }\StringTok{"Exp\_Sched"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{separate}\NormalTok{(}\AttributeTok{col=}\NormalTok{Group, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"R\_Schedule"}\NormalTok{, }\StringTok{"Interpolated"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{id =}\NormalTok{ Animal) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{separate}\NormalTok{(}\AttributeTok{col =}\NormalTok{ Animal, }\AttributeTok{into =} \FunctionTok{c}\NormalTok{(}\StringTok{"Strain"}\NormalTok{, }\StringTok{"Sex"}\NormalTok{, }\StringTok{"Cage"}\NormalTok{, }\StringTok{"Chamber"}\NormalTok{), }\AttributeTok{sep =} \StringTok{"{-}"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+## Joining with `by = join_by(Experiment, Trial, Box, Animal, Group,
+## Component.Name, Freeze.Cnt, Time.Freezing, Pct.Total.Time.Freezing,
+## Pct.Component.Time.Freezing, Avg.Motion.Index, Min.Motion.Index,
+## Max.Motion.Index, ExpDetails)`
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Expected 2 pieces. Missing pieces filled with `NA` in 30 rows [49, 58, 67, 76,
+## 85, 94, 103, 112, 121, 130, 139, 148, 157, 166, 175, 1264, 1273, 1282, 1291,
+## 1300, ...].
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Expected 4 pieces. Missing pieces filled with `NA` in 30 rows [49, 58, 67, 76,
+## 85, 94, 103, 112, 121, 130, 139, 148, 157, 166, 175, 1264, 1273, 1282, 1291,
+## 1300, ...].
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Conver list into a dataframe}
+\NormalTok{df}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(list.data)}
+
+\FunctionTok{rm}\NormalTok{(}\AttributeTok{list=}\FunctionTok{setdiff}\NormalTok{(}\FunctionTok{ls}\NormalTok{(), }\StringTok{"df"}\NormalTok{))}
+\CommentTok{\# df\textless{}{-} df \%\textgreater{}\% }
+\CommentTok{\#   drop\_na(Trial, Strain, Experiment)  }
+
+\CommentTok{\#write\_csv(df, "220803\_PREE\_df.csv")}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{fig-4.-testing-effect-of-interpolated-extinction-a-c-and-less-fear-training-d-f-on-fe}{%
+\section{Fig 4. Testing effect of interpolated extinction (A-C) and less
+fear training (D-F) on
+FE}\label{fig-4.-testing-effect-of-interpolated-extinction-a-c-and-less-fear-training-d-f-on-fe}}
+
+\hypertarget{b.-fear-acquisition}{%
+\subsection{B. Fear Acquisition}\label{b.-fear-acquisition}}
+
+We attempted to stimulate a PREE using an interpolated extinction
+session (Fig. 4D). We based this approach on a previous study which
+inflated the PREE by interpolating a block of non-reinforced trials (20
+CSs) in the conditioning phase with the rationale of enhancing the
+effect of nonreinforcement (Hilton 1969).
+
+\hypertarget{e---dataframe}{%
+\subsubsection{E - Dataframe}\label{e---dataframe}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{FC\_id\_1 }\OtherTok{\textless{}{-}}\NormalTok{ df }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(Component.Name, }\StringTok{"pre{-}tone|post{-}tone"}\NormalTok{, }\AttributeTok{negate =} \ConstantTok{TRUE}\NormalTok{),}
+         \FunctionTok{str\_detect}\NormalTok{(Exp\_Type, }\StringTok{"FC"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(id, R\_Schedule, Interpolated) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{mean\_freezing=}\FunctionTok{mean}\NormalTok{(Pct.Component.Time.Freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(Pct.Component.Time.Freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{()))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{na.omit}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'id', 'R_Schedule'. You can override using
+## the `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#write\_csv(FC\_id, "220803\_PREE\_FC\_id.csv")}
+
+\NormalTok{FC\_ave\_1 }\OtherTok{\textless{}{-}}\NormalTok{ FC\_id\_1 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(R\_Schedule, Interpolated) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{group\_mean\_freezing=}\FunctionTok{mean}\NormalTok{(mean\_freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(mean\_freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{())))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'R_Schedule'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#write\_csv(FC\_ave, "220803\_PREE\_FC\_ave.csv")}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{e---graph}{%
+\subsubsection{E - Graph}\label{e---graph}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(FC\_ave\_1,}
+       \FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Interpolated,}
+           \AttributeTok{y=}\NormalTok{group\_mean\_freezing, }
+           \AttributeTok{group=}\FunctionTok{interaction}\NormalTok{(R\_Schedule, Interpolated),}
+           \AttributeTok{color=}\NormalTok{R\_Schedule,}
+           \AttributeTok{fill=}\NormalTok{R\_Schedule,}
+           \AttributeTok{shape=}\NormalTok{Interpolated)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}
+    \AttributeTok{stat =} \StringTok{"identity"}\NormalTok{,}
+    \AttributeTok{position =} \StringTok{"dodge"}\NormalTok{,}
+    \AttributeTok{width=}\FloatTok{0.8}\NormalTok{,}
+    \AttributeTok{alpha=}\FloatTok{0.4}\NormalTok{,}
+    \AttributeTok{color=}\ConstantTok{NA}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_errorbar}\NormalTok{(}
+    \FunctionTok{aes}\NormalTok{(}
+      \AttributeTok{ymin =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{{-}}\NormalTok{se,}
+      \AttributeTok{ymax =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{+}\NormalTok{se,}
+      \AttributeTok{width =}\NormalTok{ .}\DecValTok{2}\NormalTok{),}
+    \AttributeTok{position=}\FunctionTok{position\_dodge}\NormalTok{(}\AttributeTok{width=}\FloatTok{0.8}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}
+    \AttributeTok{data=}\NormalTok{FC\_id\_1,}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Interpolated, }\AttributeTok{y=}\NormalTok{mean\_freezing), }
+    \AttributeTok{position =} \FunctionTok{position\_jitterdodge}\NormalTok{(}\AttributeTok{jitter.height=}\DecValTok{0}\NormalTok{, }\AttributeTok{jitter.width=}\FloatTok{0.25}\NormalTok{,}
+                                    \AttributeTok{dodge.width =} \FloatTok{0.8}\NormalTok{),}
+    \AttributeTok{size=}\DecValTok{3}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{ylim}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{100}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text=}\FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{,}
+        \AttributeTok{panel.border=} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{,}\AttributeTok{face=}\StringTok{"bold.italic"}\NormalTok{, }\AttributeTok{hjust=}\FloatTok{0.5}\NormalTok{),}
+        \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{),}
+        \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{),}
+        \AttributeTok{axis.title.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=} \StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=}\StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{axis.line.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Interpolated Extinction"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"\% Time Freezing"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+## i Please use the `linewidth` argument instead.
+\end{verbatim}
+
+\includegraphics{PREE-Analyses_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\hypertarget{e---stats}{%
+\subsubsection{E - Stats}\label{e---stats}}
+
+Sex was originally in the statistical model: mean\_freezing
+\textasciitilde{} Contingency (2) X CS\_time (2) X Sex (2). However,
+considering broad lack of sex-specific effects, it was dropped from
+models.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{m4e }\OtherTok{\textless{}{-}}\NormalTok{ FC\_id\_1 }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{aov\_ez}\NormalTok{(}\AttributeTok{id =} \StringTok{"id"}\NormalTok{,}
+         \AttributeTok{dv =} \StringTok{"mean\_freezing"}\NormalTok{,}
+         \AttributeTok{between =} \FunctionTok{c}\NormalTok{(}\StringTok{"R\_Schedule"}\NormalTok{, }\StringTok{"Interpolated"}\NormalTok{),}
+         \AttributeTok{data =}\NormalTok{ .)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Converting to factor: R_Schedule, Interpolated
+\end{verbatim}
+
+\begin{verbatim}
+## Contrasts set to contr.sum for the following variables: R_Schedule, Interpolated
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#ANOVA table}
+\NormalTok{nice\_m4e }\OtherTok{\textless{}{-}}\FunctionTok{nice}\NormalTok{(m4e)}
+\FunctionTok{kable}\NormalTok{(nice\_m4e, }\AttributeTok{caption =} \StringTok{\textquotesingle{}\textless{}b\textgreater{}Figure 4E: Main FX\textless{}/b\textgreater{}\textquotesingle{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{kable\_styling}\NormalTok{(}\AttributeTok{bootstrap\_options =} \StringTok{"striped"}\NormalTok{, }\AttributeTok{full\_width =}\NormalTok{ F, }\AttributeTok{position =} \StringTok{"left"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[l]{llllll}
+\caption{\label{tab:unnamed-chunk-5}<b>Figure 4E: Main FX</b>}\\
+\toprule
+Effect & df & MSE & F & ges & p.value\\
+\midrule
+R\_Schedule & 1, 38 & 174.21 & 3.82 + & .091 & .058\\
+Interpolated & 1, 38 & 174.21 & 0.27 & .007 & .605\\
+R\_Schedule:Interpolated & 1, 38 & 174.21 & 1.16 & .030 & .288\\
+\bottomrule
+\end{longtable}
+
+\hypertarget{f.-extinction-acquisition}{%
+\subsection{F. Extinction Acquisition}\label{f.-extinction-acquisition}}
+
+Explain this graph
+
+\hypertarget{f---tidy-dataframe}{%
+\subsubsection{F - Tidy dataframe}\label{f---tidy-dataframe}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bin1 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 01"}\NormalTok{, }\StringTok{"tone 02"}\NormalTok{, }\StringTok{"tone 03"}\NormalTok{)}
+\NormalTok{bin2 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 04"}\NormalTok{, }\StringTok{"tone 05"}\NormalTok{, }\StringTok{"tone 06"}\NormalTok{)}
+\NormalTok{bin3 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 07"}\NormalTok{, }\StringTok{"tone 08"}\NormalTok{, }\StringTok{"tone 09"}\NormalTok{)}
+\NormalTok{bin4 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 10"}\NormalTok{, }\StringTok{"tone 11"}\NormalTok{, }\StringTok{"tone 12"}\NormalTok{)}
+
+\NormalTok{EXT\_bin\_id\_1 }\OtherTok{\textless{}{-}}\NormalTok{ df }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(Experiment, }\StringTok{"E"}\NormalTok{),}
+         \FunctionTok{str\_detect}\NormalTok{(Experiment, }\StringTok{"IPE"}\NormalTok{, }\AttributeTok{negate =} \ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Bin =} \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%} \StringTok{"pre{-}tone"}\NormalTok{, }\StringTok{"Pre"}\NormalTok{,}
+                      \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin1, }\StringTok{"1"}\NormalTok{,}
+                             \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin2, }\StringTok{"2"}\NormalTok{,}
+                                    \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin3, }\StringTok{"3"}\NormalTok{,}
+                                           \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin4, }\StringTok{"4"}\NormalTok{, }\StringTok{"Post"}\NormalTok{)))))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(Exp\_Type, id, R\_Schedule, Interpolated, Bin) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{mean\_freezing=}\FunctionTok{mean}\NormalTok{(Pct.Component.Time.Freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(Pct.Component.Time.Freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{())))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'Exp_Type', 'id', 'R_Schedule',
+## 'Interpolated'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{EXT\_bin\_ave\_1 }\OtherTok{\textless{}{-}}\NormalTok{ EXT\_bin\_id\_1 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(Exp\_Type, R\_Schedule, Interpolated, Bin) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{group\_mean\_freezing=}\FunctionTok{mean}\NormalTok{(mean\_freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(mean\_freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{())))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'Exp_Type', 'R_Schedule', 'Interpolated'.
+## You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{EXT\_bin\_ave\_1}\SpecialCharTok{$}\NormalTok{Bin }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(EXT\_bin\_ave\_1}\SpecialCharTok{$}\NormalTok{Bin, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Pre"}\NormalTok{, }\StringTok{"1"}\NormalTok{, }\StringTok{"2"}\NormalTok{, }\StringTok{"3"}\NormalTok{, }\StringTok{"4"}\NormalTok{, }\StringTok{"Post"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{f---graph}{%
+\subsubsection{F - Graph}\label{f---graph}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}
+  \AttributeTok{data =} \FunctionTok{subset}\NormalTok{(EXT\_bin\_ave\_1, }\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(Bin)),}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Bin,}
+      \AttributeTok{y=}\NormalTok{group\_mean\_freezing,}
+      \AttributeTok{group =} \FunctionTok{interaction}\NormalTok{(R\_Schedule, Interpolated),}
+      \AttributeTok{color =}\NormalTok{ R\_Schedule,}
+      \AttributeTok{fill =}\NormalTok{ R\_Schedule,}
+      \AttributeTok{shape=}\NormalTok{Interpolated)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}
+    \FunctionTok{vars}\NormalTok{(Exp\_Type)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}
+    \AttributeTok{size =} \DecValTok{3}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{linetype=}\NormalTok{ Interpolated)}
+\NormalTok{  ) }\SpecialCharTok{+} 
+  \FunctionTok{ylim}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{100}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_ribbon}\NormalTok{(}
+    \FunctionTok{aes}\NormalTok{(}
+      \AttributeTok{ymin =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{{-}}\NormalTok{se,}
+      \AttributeTok{ymax =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{+}\NormalTok{se),}
+    \AttributeTok{alpha =}\NormalTok{ .}\DecValTok{2}\NormalTok{,}
+    \AttributeTok{color =} \ConstantTok{NA}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text=}\FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{,}
+        \AttributeTok{panel.border=} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{,}\AttributeTok{face=}\StringTok{"bold.italic"}\NormalTok{, }\AttributeTok{hjust=}\FloatTok{0.5}\NormalTok{),}
+        \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{angle =} \DecValTok{45}\NormalTok{),}
+        \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{),}
+        \AttributeTok{axis.title.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=} \StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=}\StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{axis.line.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Bin"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"\% Time Freezing"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PREE-Analyses_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\hypertarget{f---stats-anova-statistical-analyses-are-represented-in-figs-1d-e}{%
+\subsubsection{F - Stats (ANOVA statistical analyses are represented in
+figs 1D-E
+)}\label{f---stats-anova-statistical-analyses-are-represented-in-figs-1d-e}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\#\#\#\# FE1 \#\#\#\#\#\#\#\#\#\#\#\#}
+\NormalTok{m4c }\OtherTok{\textless{}{-}}\NormalTok{ EXT\_bin\_id\_1 }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(Bin, }\StringTok{"Pre|Post"}\NormalTok{, }\AttributeTok{negate =} \ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{aov\_ez}\NormalTok{(}\AttributeTok{id =} \StringTok{"id"}\NormalTok{,}
+         \AttributeTok{dv =} \StringTok{"mean\_freezing"}\NormalTok{,}
+         \AttributeTok{between =} \FunctionTok{c}\NormalTok{(}\StringTok{"R\_Schedule"}\NormalTok{, }\StringTok{"Interpolated"}\NormalTok{),}
+         \AttributeTok{within =} \FunctionTok{c}\NormalTok{(}\StringTok{"Bin"}\NormalTok{),}
+         \AttributeTok{data =}\NormalTok{ .)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Converting to factor: R_Schedule, Interpolated
+\end{verbatim}
+
+\begin{verbatim}
+## Contrasts set to contr.sum for the following variables: R_Schedule, Interpolated
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#ANOVA table}
+\NormalTok{nice\_m4c }\OtherTok{\textless{}{-}}\FunctionTok{nice}\NormalTok{(m4c)}
+\FunctionTok{kable}\NormalTok{(nice\_m4c, }\AttributeTok{caption =} \StringTok{\textquotesingle{}\textless{}b\textgreater{}Figure 4C: Main FX\textless{}/b\textgreater{}\textquotesingle{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{kable\_styling}\NormalTok{(}\AttributeTok{bootstrap\_options =} \StringTok{"striped"}\NormalTok{, }\AttributeTok{full\_width =}\NormalTok{ F, }\AttributeTok{position =} \StringTok{"left"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[l]{llllll}
+\caption{\label{tab:unnamed-chunk-8}<b>Figure 4C: Main FX</b>}\\
+\toprule
+Effect & df & MSE & F & ges & p.value\\
+\midrule
+R\_Schedule & 1, 32 & 845.53 & 0.85 & .015 & .365\\
+Interpolated & 1, 32 & 845.53 & 4.96 * & .085 & .033\\
+R\_Schedule:Interpolated & 1, 32 & 845.53 & 0.17 & .003 & .680\\
+Bin & 2.67, 85.53 & 214.32 & 18.23 *** & .187 & <.001\\
+R\_Schedule:Bin & 2.67, 85.53 & 214.32 & 0.79 & .010 & .490\\
+\addlinespace
+Interpolated:Bin & 2.67, 85.53 & 214.32 & 0.60 & .008 & .596\\
+R\_Schedule:Interpolated:Bin & 2.67, 85.53 & 214.32 & 1.05 & .013 & .371\\
+\bottomrule
+\end{longtable}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Simple contrasts for Contingency}
+\NormalTok{n4c }\OtherTok{\textless{}{-}} \FunctionTok{emmeans}\NormalTok{(m4c, }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Interpolated)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## NOTE: Results may be misleading due to involvement in interactions
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{n4c\_pairs }\OtherTok{\textless{}{-}} \FunctionTok{pairs}\NormalTok{(n4c, }\AttributeTok{simple=}\StringTok{"each"}\NormalTok{)}
+\FunctionTok{kable}\NormalTok{(n4c\_pairs[}\DecValTok{1}\NormalTok{], }\AttributeTok{caption =} \StringTok{\textquotesingle{}\textless{}b\textgreater{}Figure 4C: Simple Contrasts for Interpolated CS\textless{}/b\textgreater{}\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{table}
+\caption{\label{tab:unnamed-chunk-8}<b>Figure 4C: Simple Contrasts for Interpolated CS</b>}
+
+\centering
+\begin{tabular}[t]{l|r|r|r|r|r}
+\hline
+contrast & estimate & SE & df & t.ratio & p.value\\
+\hline
+N - Y & 11.06779 & 4.970622 & 32 & 2.22664 & 0.0331343\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{kable}\NormalTok{(n4c\_pairs[}\DecValTok{2}\NormalTok{], }\AttributeTok{caption =} \StringTok{\textquotesingle{}\textless{}b\textgreater{}Figure 4C: Simple Contrasts for CS{-}Bin CS\textless{}/b\textgreater{}\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{table}
+\caption{\label{tab:unnamed-chunk-8}<b>Figure 4C: Simple Contrasts for CS-Bin CS</b>}
+
+\centering
+\begin{tabular}[t]{}
+\hline
+
+\hline
+\end{tabular}
+\end{table}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{n4c\_pairs}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  contrast estimate   SE df t.ratio p.value
+##  N - Y        11.1 4.97 32   2.227  0.0331
+## 
+## Results are averaged over the levels of: R_Schedule, Bin
+\end{verbatim}
+
+\hypertarget{not-shown-interpolated-extinction-session}{%
+\subsection{Not Shown Interpolated extinction
+session}\label{not-shown-interpolated-extinction-session}}
+
+Explain this graph
+
+\hypertarget{not-shown---tidy-dataframe}{%
+\subsubsection{Not Shown - Tidy
+dataframe}\label{not-shown---tidy-dataframe}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bin1 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 01"}\NormalTok{, }\StringTok{"tone 02"}\NormalTok{, }\StringTok{"tone 03"}\NormalTok{, }\StringTok{"tone 04"}\NormalTok{, }\StringTok{"tone 05"}\NormalTok{)}
+\NormalTok{bin2 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 06"}\NormalTok{, }\StringTok{"tone 07"}\NormalTok{, }\StringTok{"tone 08"}\NormalTok{, }\StringTok{"tone 09"}\NormalTok{,}\StringTok{"tone 10"}\NormalTok{)}
+\NormalTok{bin3 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 11"}\NormalTok{, }\StringTok{"tone 12"}\NormalTok{,}\StringTok{"tone 13"}\NormalTok{, }\StringTok{"tone 14"}\NormalTok{, }\StringTok{"tone 15"}\NormalTok{ )}
+\NormalTok{bin4 }\OtherTok{=}\FunctionTok{c}\NormalTok{(}\StringTok{"tone 16"}\NormalTok{, }\StringTok{"tone 17"}\NormalTok{,}\StringTok{"tone 18"}\NormalTok{, }\StringTok{"tone 19"}\NormalTok{, }\StringTok{"tone 20"}\NormalTok{ )}
+
+\NormalTok{EXT\_bin\_id\_1 }\OtherTok{\textless{}{-}}\NormalTok{ df }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(Experiment, }\StringTok{"IPE"}\NormalTok{),}
+         \FunctionTok{str\_detect}\NormalTok{(Experiment, }\StringTok{"E1"}\NormalTok{, }\AttributeTok{negate =} \ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Bin =} \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%} \StringTok{"pre{-}tone"}\NormalTok{, }\StringTok{"Pre"}\NormalTok{,}
+                      \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin1, }\StringTok{"1"}\NormalTok{,}
+                             \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin2, }\StringTok{"2"}\NormalTok{,}
+                                    \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin3, }\StringTok{"3"}\NormalTok{,}
+                                           \FunctionTok{ifelse}\NormalTok{(Component.Name }\SpecialCharTok{\%in\%}\NormalTok{ bin4, }\StringTok{"4"}\NormalTok{, }\StringTok{"Post"}\NormalTok{)))))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(Exp\_Type, id, R\_Schedule, Interpolated, Bin) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{mean\_freezing=}\FunctionTok{mean}\NormalTok{(Pct.Component.Time.Freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(Pct.Component.Time.Freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{())))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'Exp_Type', 'id', 'R_Schedule',
+## 'Interpolated'. You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{EXT\_bin\_ave\_1 }\OtherTok{\textless{}{-}}\NormalTok{ EXT\_bin\_id\_1 }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(Exp\_Type, R\_Schedule, Interpolated, Bin) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarize}\NormalTok{(}\AttributeTok{group\_mean\_freezing=}\FunctionTok{mean}\NormalTok{(mean\_freezing), }\AttributeTok{n=}\FunctionTok{n}\NormalTok{(),}
+            \AttributeTok{se=}\FunctionTok{sd}\NormalTok{(mean\_freezing}\SpecialCharTok{/}\FunctionTok{sqrt}\NormalTok{(}\FunctionTok{n}\NormalTok{())))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'Exp_Type', 'R_Schedule', 'Interpolated'.
+## You can override using the `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{EXT\_bin\_ave\_1}\SpecialCharTok{$}\NormalTok{Bin }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(EXT\_bin\_ave\_1}\SpecialCharTok{$}\NormalTok{Bin, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Pre"}\NormalTok{, }\StringTok{"1"}\NormalTok{, }\StringTok{"2"}\NormalTok{, }\StringTok{"3"}\NormalTok{, }\StringTok{"4"}\NormalTok{, }\StringTok{"Post"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{not-shown---graph}{%
+\subsubsection{Not Shown - Graph}\label{not-shown---graph}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}
+  \AttributeTok{data =} \FunctionTok{subset}\NormalTok{(EXT\_bin\_ave\_1, }\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(Bin)),}
+  \FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{Bin,}
+      \AttributeTok{y=}\NormalTok{group\_mean\_freezing,}
+      \AttributeTok{group =} \FunctionTok{interaction}\NormalTok{(R\_Schedule, Interpolated),}
+      \AttributeTok{color =}\NormalTok{ R\_Schedule,}
+      \AttributeTok{fill =}\NormalTok{ R\_Schedule,}
+      \AttributeTok{shape=}\NormalTok{Interpolated)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_viridis}\NormalTok{(}\AttributeTok{discrete =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}
+    \FunctionTok{vars}\NormalTok{(Exp\_Type)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}
+    \AttributeTok{size =} \DecValTok{3}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}
+\NormalTok{  ) }\SpecialCharTok{+} 
+  \FunctionTok{ylim}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{100}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_ribbon}\NormalTok{(}
+    \FunctionTok{aes}\NormalTok{(}
+      \AttributeTok{ymin =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{{-}}\NormalTok{se,}
+      \AttributeTok{ymax =}\NormalTok{ group\_mean\_freezing}\SpecialCharTok{+}\NormalTok{se),}
+    \AttributeTok{alpha =}\NormalTok{ .}\DecValTok{2}\NormalTok{,}
+    \AttributeTok{color =} \ConstantTok{NA}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text=}\FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+        \AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{,}
+        \AttributeTok{panel.border=} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{,}\AttributeTok{face=}\StringTok{"bold.italic"}\NormalTok{, }\AttributeTok{hjust=}\FloatTok{0.5}\NormalTok{),}
+        \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+        \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{angle =} \DecValTok{45}\NormalTok{),}
+        \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{color=}\StringTok{"black"}\NormalTok{),}
+        \AttributeTok{axis.title.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=} \StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{, }\AttributeTok{face=}\StringTok{"bold"}\NormalTok{),}
+        \AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{axis.line.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{linewidth =} \DecValTok{1}\NormalTok{),}
+        \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{)) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}
+    \AttributeTok{x =} \StringTok{"Bin"}\NormalTok{,}
+    \AttributeTok{y =} \StringTok{"\% Time Freezing"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PREE-Analyses_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\end{document}

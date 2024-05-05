@@ -1,0 +1,247 @@
+---
+title: "Su et al., (2024): Figure 4A - C"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+# Load packages
+
+```{r include=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(afex)
+library(emmeans)
+library(pwr2)
+library(rstatix)
+library(viridis)
+```
+
+# Fig 4 B-C: Reducing the number of Fear Conditioning Sessions to 1
+
+Previous studies have found that the over-training may occlude the PREE (Hilton 1969; Sutherland et al 1965). To address the possibility that this was occuring in our experiments, we reduced the fear conditioning protocol from two days to one (see Fig. 4A).
+
+# Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+```{r}
+# df ---------------------------------------------------
+
+list.files(pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(".", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+# delete the metadata from the list.filenames
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*CR.csv$"), 15,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*PR.csv$"), 18,
+                                                    ifelse(str_detect(list.filenames[[i]], "E1"), 24,
+                                                           ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                  24))))
+  )
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 3, -5)
+
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>% #collapse separate items in list into one
+  separate(col=ExpDetails, into = c("Exp_Date", "Exp_Type", "Exp_Room", "Exp_Sched"), sep = "_") %>% 
+  mutate(id = Animal) %>% 
+  separate(col = Animal, into = c("Strain", "Sex", "Cage", "Chamber"), sep = "-")
+
+# Conver list into a dataframe
+df<-as.data.frame(list.data) %>%  filter(Trial != "NA")
+
+rm(list=setdiff(ls(), "df"))
+# df<- df %>% 
+#   drop_na(Trial, Strain, Experiment)  
+
+#write_csv(df, "220803_PREE_df.csv")
+```
+
+## B. Fear Acquisition  
+### B - Dataframe
+```{r}
+FC_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "FC")) %>% 
+  group_by(id, Group) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+#write_csv(FC_id, "220803_PREE_FC_id.csv")
+
+FC_ave_1 <- FC_id_1 %>% 
+  group_by(Group) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+#write_csv(FC_ave, "220803_PREE_FC_ave.csv")
+```
+### B - Graph
+```{r}
+ggplot(FC_ave_1,
+       aes(x=Group,
+           y=group_mean_freezing, 
+           group=Group,
+           color=Group,
+           fill=Group)) +
+  scale_fill_viridis(discrete = TRUE) +
+  scale_colour_viridis(discrete = TRUE) +
+  geom_bar(
+    stat = "identity",
+    position = "dodge",
+    width=0.8,
+    alpha=0.4,
+    color=NA) + 
+  geom_errorbar(
+    aes(
+      ymin = group_mean_freezing-se,
+      ymax = group_mean_freezing+se,
+      width = .2),
+    position=position_dodge(width=0.8)
+  ) +
+  geom_point(
+    data=FC_id_1,
+    aes(x=Group, y=mean_freezing), 
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=3
+  ) +
+  ylim(0,100) +
+  theme_bw() + 
+  theme(legend.text=element_text(size=18),
+        legend.title = element_text(size=18),
+        legend.position = "top",
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 18, color="black"),
+        axis.text.y = element_text(size = 18, color="black"),
+        axis.title.x = element_text(size = 18, face= "bold"),
+        axis.title.y = element_text(size = 18, face="bold"),
+        axis.line.x = element_line(color="black", size = 1),
+        axis.line.y = element_line(color="black", size = 1),
+        strip.text = element_text(size = 18)) + 
+  labs(
+    x = "Contingency",
+    y = "% Time Freezing")
+```
+
+
+### B - Stats
+Sex was originally in the statistical model: mean_freezing ~ Contingency (2) X CS_time (2) X Sex (2). However, considering broad lack of sex-specific effects, it was dropped from models.
+```{r}
+m4b <- FC_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Group"),
+         data = .)
+
+#ANOVA table
+nice_m4b <-nice(m4b)
+kable(nice_m4b, caption = '<b>Figure 4B: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+```
+
+## C. Extinction Acquisition
+Explain this graph
+
+### C - Dataframe
+```{r}
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Experiment, "E1")) %>% 
+  mutate(Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                      ifelse(Component.Name %in% bin1, "1",
+                             ifelse(Component.Name %in% bin2, "2",
+                                    ifelse(Component.Name %in% bin3, "3",
+                                           ifelse(Component.Name %in% bin4, "4", "Post")))))) %>% 
+  group_by(Exp_Type, id, Group, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Group, Bin) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+
+```
+
+### C - Graph
+```{r}
+ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=Bin,
+      y=group_mean_freezing,
+      group = interaction(Group),
+      color = Group,
+      fill = Group)) +
+  scale_fill_viridis(discrete = TRUE) +
+  scale_colour_viridis(discrete = TRUE) +
+  geom_point(
+    size = 3
+  ) +
+  geom_line(
+  ) + 
+  ylim(0,100) +
+  geom_ribbon(
+    aes(
+      ymin = group_mean_freezing-se,
+      ymax = group_mean_freezing+se),
+    alpha = .2,
+    color = NA
+  ) +
+  theme_bw() +
+  theme(legend.text=element_text(size=18),
+        legend.title = element_text(size=18),
+        legend.position = "top",
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 10, color="black", angle = 45),
+        axis.text.y = element_text(size = 18, color="black"),
+        axis.title.x = element_text(size = 18, face= "bold"),
+        axis.title.y = element_text(size = 18, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1),
+        strip.text = element_text(size = 18)) + 
+  labs(
+    x = "Bin",
+    y = "% Time Freezing")
+
+```
+
+### C - Stats (ANOVA statistical analyses are represented in figs 1D-E )
+```{r}
+###### FE1 ############
+m4c.FE <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+  # filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Group"),
+         within = c("Bin"),
+         # covariate = "Exp_Type", factorize=FALSE,
+         data = .)
+
+#ANOVA table
+nice_m4c <-nice(m4c.FE)
+kable(nice_m4c, caption = '<b>Figure 4C: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
