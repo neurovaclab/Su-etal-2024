@@ -1,0 +1,45 @@
+Date :,02/18/22 16:54:59,,,,,,,,,,,
+Motion Threshold (au):,18,,,,,,,,,,,
+Detection Method:,Linear,,,,,,,,,,,
+Min Freeze Duration (f):,30,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+Component Details,,,,,,,,,,,,
+Component Name,Start Time,Duration (s),Start Frame,Duration Frames,,,,,,,,
+pre-tone, 0:00:00.000,133,0,3990,,,,,,,,
+tone 01, 0:02:13.000,10,3990,300,,,,,,,,
+tone 02, 0:02:48.000,10,5040,300,,,,,,,,
+tone 03, 0:04:14.000,10,7620,300,,,,,,,,
+tone 04, 0:04:39.000,10,8370,300,,,,,,,,
+tone 05, 0:05:27.000,10,9810,300,,,,,,,,
+tone 06, 0:06:00.000,10,10800,300,,,,,,,,
+post-tone, 0:06:10.000,143,11100,4290,,,,,,,,
+,,,,,,,,,,,,
+Experiment,Trial,Box,Animal,Group,Component Name,Freeze Cnt,Time Freezing,Pct Total Time Freezing,Pct Component Time Freezing,Avg Motion Index,Min Motion Index,Max Motion Index
+VF021722_FC2,2,Chamber 1,,,pre-tone,42,84.667,16.5,63.66,5.14,0,146
+VF021722_FC2,2,Chamber 1,,,tone 01,0,0,0,0,201.95,0,3673
+VF021722_FC2,2,Chamber 1,,,tone 02,4,8.6,1.68,86,3.28,0,47
+VF021722_FC2,2,Chamber 1,,,tone 03,0,0,0,0,159.27,0,1530
+VF021722_FC2,2,Chamber 1,,,tone 04,1,6.433,1.25,64.33,40.47,0,456
+VF021722_FC2,2,Chamber 1,,,tone 05,1,9.233,1.8,92.33,10.39,0,373
+VF021722_FC2,2,Chamber 1,,,tone 06,1,8.733,1.7,87.33,5.17,0,207
+VF021722_FC2,2,Chamber 1,,,post-tone,13,99.767,19.45,69.77,31.71,0,5515
+,,,,,,,,,,,,
+VF021722_FC2,2,Chamber 2,,,pre-tone,13,16.733,3.26,12.58,43.93,0,598
+VF021722_FC2,2,Chamber 2,,,tone 01,2,3.533,0.69,35.33,76.05,0,1030
+VF021722_FC2,2,Chamber 2,,,tone 02,1,5.533,1.08,55.33,9.76,0,143
+VF021722_FC2,2,Chamber 2,,,tone 03,1,8.433,1.64,84.33,4.46,0,140
+VF021722_FC2,2,Chamber 2,,,tone 04,1,8.8,1.72,88,1.34,0,98
+VF021722_FC2,2,Chamber 2,,,tone 05,1,7.367,1.44,73.67,18.32,0,332
+VF021722_FC2,2,Chamber 2,,,tone 06,1,1.033,0.2,10.33,149.53,0,1100
+VF021722_FC2,2,Chamber 2,,,post-tone,10,122.333,23.85,85.55,18.77,0,1568
+,,,,,,,,,,,,
+VF021722_FC2,2,Chamber 3,,,pre-tone,31,59.867,11.67,45.01,11.79,0,199
+VF021722_FC2,2,Chamber 3,,,tone 01,1,3.667,0.71,36.67,17.68,0,204
+VF021722_FC2,2,Chamber 3,,,tone 02,1,10,1.95,100,0.28,0,5
+VF021722_FC2,2,Chamber 3,,,tone 03,1,2.333,0.45,23.33,70.28,0,435
+VF021722_FC2,2,Chamber 3,,,tone 04,1,8.867,1.73,88.67,2.13,0,78
+VF021722_FC2,2,Chamber 3,,,tone 05,1,3.1,0.6,31,93.3,0,617
+VF021722_FC2,2,Chamber 3,,,tone 06,1,2.433,0.47,24.33,185.21,0,2999
+VF021722_FC2,2,Chamber 3,,,post-tone,4,132.467,25.82,92.63,12.52,0,2187

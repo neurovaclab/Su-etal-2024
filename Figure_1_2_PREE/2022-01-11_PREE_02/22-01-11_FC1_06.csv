@@ -1,0 +1,45 @@
+Date :,02/18/22 16:37:54,,,,,,,,,,,
+Motion Threshold (au):,18,,,,,,,,,,,
+Detection Method:,Linear,,,,,,,,,,,
+Min Freeze Duration (f):,30,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+Component Details,,,,,,,,,,,,
+Component Name,Start Time,Duration (s),Start Frame,Duration Frames,,,,,,,,
+pre-tone, 0:00:00.000,180,0,5400,,,,,,,,
+tone 01, 0:04:50.000,25,8700,750,,,,,,,,
+tone 02, 0:06:05.000,25,10950,750,,,,,,,,
+tone 03, 0:08:10.000,25,14700,750,,,,,,,,
+tone 04, 0:10:05.000,25,18150,750,,,,,,,,
+tone 05, 0:11:20.000,25,20400,750,,,,,,,,
+tone 06, 0:12:05.000,25,21750,750,,,,,,,,
+post-tone, 0:12:30.000,180,22500,5400,,,,,,,,
+,,,,,,,,,,,,
+Experiment,Trial,Box,Animal,Group,Component Name,Freeze Cnt,Time Freezing,Pct Total Time Freezing,Pct Component Time Freezing,Avg Motion Index,Min Motion Index,Max Motion Index
+VF011122_FC1,1,Chamber 1,,,pre-tone,0,0,0,0,238.47,0,1758
+VF011122_FC1,1,Chamber 1,,,tone 01,0,0,0,0,203.15,0,1387
+VF011122_FC1,1,Chamber 1,,,tone 02,1,1.5,0.16,6,94.95,0,543
+VF011122_FC1,1,Chamber 1,,,tone 03,6,9.767,1.05,39.07,33.19,0,272
+VF011122_FC1,1,Chamber 1,,,tone 04,2,14.033,1.51,56.13,34.24,0,343
+VF011122_FC1,1,Chamber 1,,,tone 05,3,19.4,2.09,77.6,8.37,0,231
+VF011122_FC1,1,Chamber 1,,,tone 06,2,23.333,2.51,93.33,4.43,0,197
+VF011122_FC1,1,Chamber 1,,,post-tone,9,106.467,11.45,59.15,66.65,0,4220
+,,,,,,,,,,,,
+VF011122_FC1,1,Chamber 2,,,pre-tone,0,0,0,0,224.72,0,1681
+VF011122_FC1,1,Chamber 2,,,tone 01,0,0,0,0,281.09,0,1334
+VF011122_FC1,1,Chamber 2,,,tone 02,1,1,0.11,4,100.1,0,947
+VF011122_FC1,1,Chamber 2,,,tone 03,3,4.067,0.44,16.27,87.5,0,678
+VF011122_FC1,1,Chamber 2,,,tone 04,2,3.667,0.39,14.67,94.92,0,714
+VF011122_FC1,1,Chamber 2,,,tone 05,3,16.4,1.76,65.6,36.84,0,618
+VF011122_FC1,1,Chamber 2,,,tone 06,4,13.533,1.46,54.13,34.45,0,509
+VF011122_FC1,1,Chamber 2,,,post-tone,23,58.533,6.29,32.52,80.46,0,4988
+,,,,,,,,,,,,
+VF011122_FC1,1,Chamber 3,,,pre-tone,1,1.033,0.11,0.57,208.38,0,1438
+VF011122_FC1,1,Chamber 3,,,tone 01,0,0,0,0,253.83,0,1656
+VF011122_FC1,1,Chamber 3,,,tone 02,0,0,0,0,134.66,0,844
+VF011122_FC1,1,Chamber 3,,,tone 03,2,6.433,0.69,25.73,85.7,0,547
+VF011122_FC1,1,Chamber 3,,,tone 04,4,11.5,1.24,46,69.33,0,1100
+VF011122_FC1,1,Chamber 3,,,tone 05,2,3.8,0.41,15.2,79.98,0,882
+VF011122_FC1,1,Chamber 3,,,tone 06,4,7.867,0.85,31.47,58.86,0,468
+VF011122_FC1,1,Chamber 3,,,post-tone,18,30.3,3.26,16.83,77.02,0,3715

@@ -1,0 +1,54 @@
+Date :,03/05/22 15:23:42,,,,,,,,,,,
+Motion Threshold (au):,18,,,,,,,,,,,
+Detection Method:,Linear,,,,,,,,,,,
+Min Freeze Duration (f):,30,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+Component Details,,,,,,,,,,,,
+Component Name,Start Time,Duration (s),Start Frame,Duration Frames,,,,,,,,
+pre-tone, 0:00:00.000,152,0,4560,,,,,,,,
+tone 01, 0:02:32.000,10,4560,300,,,,,,,,
+tone 02, 0:02:57.000,10,5310,300,,,,,,,,
+tone 03, 0:03:20.000,10,6000,300,,,,,,,,
+tone 04, 0:04:35.000,10,8250,300,,,,,,,,
+tone 05, 0:05:27.000,10,9810,300,,,,,,,,
+tone 06, 0:05:43.000,10,10290,300,,,,,,,,
+post-tone, 0:05:53.000,160,10590,4800,,,,,,,,
+,,,,,,,,,,,,
+Experiment,Trial,Box,Animal,Group,Component Name,Freeze Cnt,Time Freezing,Pct Total Time Freezing,Pct Component Time Freezing,Avg Motion Index,Min Motion Index,Max Motion Index
+VF030122_FC1,6,Chamber 1,,,pre-tone,0,0,0,0,224.68,0,1425
+VF030122_FC1,6,Chamber 1,,,tone 01,0,0,0,0,242.34,0,741
+VF030122_FC1,6,Chamber 1,,,tone 02,1,1.8,0.35,18,55.33,0,398
+VF030122_FC1,6,Chamber 1,,,tone 03,2,4.833,0.94,48.33,27.17,0,532
+VF030122_FC1,6,Chamber 1,,,tone 04,2,5.633,1.1,56.33,35.87,0,485
+VF030122_FC1,6,Chamber 1,,,tone 05,2,5.3,1.03,53,85.61,0,1237
+VF030122_FC1,6,Chamber 1,,,tone 06,1,1.4,0.27,14,24.57,0,309
+VF030122_FC1,6,Chamber 1,,,post-tone,9,141.8,27.64,88.63,22.39,0,2823
+,,,,,,,,,,,,
+VF030122_FC1,6,Chamber 2,,,pre-tone,0,0,0,0,295.73,0,1582
+VF030122_FC1,6,Chamber 2,,,tone 01,0,0,0,0,251.15,0,1474
+VF030122_FC1,6,Chamber 2,,,tone 02,4,5.8,1.13,58,35.87,0,238
+VF030122_FC1,6,Chamber 2,,,tone 03,2,8.633,1.68,86.33,1.91,0,48
+VF030122_FC1,6,Chamber 2,,,tone 04,1,8.267,1.61,82.67,11.34,0,146
+VF030122_FC1,6,Chamber 2,,,tone 05,1,10,1.95,100,0.02,0,1
+VF030122_FC1,6,Chamber 2,,,tone 06,1,9.7,1.89,97,1.47,0,96
+VF030122_FC1,6,Chamber 2,,,post-tone,6,148.9,29.03,93.06,17.65,0,3820
+,,,,,,,,,,,,
+VF030122_FC1,6,Chamber 3,,,pre-tone,0,0,0,0,194.58,0,1185
+VF030122_FC1,6,Chamber 3,,,tone 01,0,0,0,0,311.55,9,1216
+VF030122_FC1,6,Chamber 3,,,tone 02,0,0,0,0,323.84,0,1056
+VF030122_FC1,6,Chamber 3,,,tone 03,1,1.533,0.3,15.33,71.58,0,221
+VF030122_FC1,6,Chamber 3,,,tone 04,0,0,0,0,97.27,0,654
+VF030122_FC1,6,Chamber 3,,,tone 05,1,1.5,0.29,15,130.94,0,1720
+VF030122_FC1,6,Chamber 3,,,tone 06,2,9.933,1.94,99.33,0.47,0,43
+VF030122_FC1,6,Chamber 3,,,post-tone,19,99.1,19.32,61.94,62.04,0,4377
+,,,,,,,,,,,,
+VF030122_FC1,6,Chamber 4,,,pre-tone,0,0,0,0,245.03,0,1931
+VF030122_FC1,6,Chamber 4,,,tone 01,0,0,0,0,127.82,0,520
+VF030122_FC1,6,Chamber 4,,,tone 02,0,0,0,0,168.02,0,621
+VF030122_FC1,6,Chamber 4,,,tone 03,1,1.333,0.26,13.33,28.95,0,167
+VF030122_FC1,6,Chamber 4,,,tone 04,1,8.533,1.66,85.33,3.37,0,107
+VF030122_FC1,6,Chamber 4,,,tone 05,1,3.6,0.7,36,9.47,0,84
+VF030122_FC1,6,Chamber 4,,,tone 06,1,5.7,1.11,57,16.86,0,129
+VF030122_FC1,6,Chamber 4,,,post-tone,16,139.133,27.12,86.96,23.68,0,3574

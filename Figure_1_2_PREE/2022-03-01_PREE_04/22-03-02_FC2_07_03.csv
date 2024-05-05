@@ -1,0 +1,39 @@
+Date :,03/05/22 15:28:59,,,,,,,,,,,
+Motion Threshold (au):,18,,,,,,,,,,,
+Detection Method:,Linear,,,,,,,,,,,
+Min Freeze Duration (f):,30,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+Component Details,,,,,,,,,,,,
+Component Name,Start Time,Duration (s),Start Frame,Duration Frames,,,,,,,,
+pre-tone, 0:00:00.000,355,0,10650,,,,,,,,
+tone 01, 0:05:55.000,25,10650,750,,,,,,,,
+tone 02, 0:09:05.000,25,16350,750,,,,,,,,
+tone 03, 0:12:15.000,25,22050,750,,,,,,,,
+post-tone, 0:12:40.000,180,22800,5400,,,,,,,,
+,,,,,,,,,,,,
+Experiment,Trial,Box,Animal,Group,Component Name,Freeze Cnt,Time Freezing,Pct Total Time Freezing,Pct Component Time Freezing,Avg Motion Index,Min Motion Index,Max Motion Index
+VF030222_FC2,7,Chamber 1,,,pre-tone,70,225.5,23.99,63.52,16.04,0,510
+VF030222_FC2,7,Chamber 1,,,tone 01,5,17,1.81,68,17.72,0,294
+VF030222_FC2,7,Chamber 1,,,tone 02,3,22.467,2.39,89.87,1.51,0,90
+VF030222_FC2,7,Chamber 1,,,tone 03,3,23.7,2.52,94.8,1.39,0,92
+VF030222_FC2,7,Chamber 1,,,post-tone,11,170.9,18.18,94.94,12.93,0,2388
+,,,,,,,,,,,,
+VF030222_FC2,7,Chamber 2,,,pre-tone,31,54.267,5.77,15.29,131.88,0,1146
+VF030222_FC2,7,Chamber 2,,,tone 01,0,0,0,0,66.49,0,2030
+VF030222_FC2,7,Chamber 2,,,tone 02,3,5.5,0.59,22,168.66,0,3980
+VF030222_FC2,7,Chamber 2,,,tone 03,5,21,2.23,84,17.44,0,652
+VF030222_FC2,7,Chamber 2,,,post-tone,12,132.2,14.06,73.44,35.19,0,6125
+,,,,,,,,,,,,
+VF030222_FC2,7,Chamber 3,,,pre-tone,52,248.533,26.44,70.01,17.17,0,766
+VF030222_FC2,7,Chamber 3,,,tone 01,4,20.467,2.18,81.87,10.53,0,233
+VF030222_FC2,7,Chamber 3,,,tone 02,8,15.6,1.66,62.4,18.92,0,266
+VF030222_FC2,7,Chamber 3,,,tone 03,8,13.967,1.49,55.87,34.67,0,535
+VF030222_FC2,7,Chamber 3,,,post-tone,22,142.833,15.2,79.35,19.39,0,2195
+,,,,,,,,,,,,
+VF030222_FC2,7,Chamber 4,,,pre-tone,64,238.467,25.37,67.17,30.6,0,1157
+VF030222_FC2,7,Chamber 4,,,tone 01,2,24.133,2.57,96.53,1.72,0,118
+VF030222_FC2,7,Chamber 4,,,tone 02,4,8.8,0.94,35.2,125.09,0,1257
+VF030222_FC2,7,Chamber 4,,,tone 03,2,23.867,2.54,95.47,1,0,63
+VF030222_FC2,7,Chamber 4,,,post-tone,13,161.1,17.14,89.5,19.78,0,3300
