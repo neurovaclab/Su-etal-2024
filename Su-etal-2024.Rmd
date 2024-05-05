@@ -27,13 +27,13 @@ Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV 
 ```{r echo=TRUE, results = 'hide', message=FALSE}
 # df ---------------------------------------------------
 
-list.files(path="./(Figure 1-2) PREE", pattern=".csv$", recursive = TRUE)
-list.filenames <- list.files(path="./(Figure 1-2) PREE", pattern = ".csv$", 
+list.files(path="./Figure_1_2_PREE", pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(path="./Figure_1_2_PREE", pattern = ".csv$", 
                              full.names=TRUE, recursive = TRUE)
 # delete the metadata from the list.filenames
 list.filenames <- list.filenames[!(str_detect(list.filenames, "metadata"))]
 list.filenames
-metadata <- read.csv("./(Figure 1-2) PREE/metadata.csv")
+metadata <- read.csv("./Figure_1_2_PREE/metadata.csv")
 list.data <- list()
 
 for (i in 1:length(list.filenames)) {
@@ -45,7 +45,7 @@ for (i in 1:length(list.filenames)) {
                                                            ifelse(str_detect(list.filenames[[i]], "SR"), 16,
                                                                   24)))))
   )
-  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 40
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 38
                                        , -5)
   #remove the first and last characters 
   list.data[[i]] <- dplyr::select(list.data[[i]], -c(Animal, Group))
@@ -1107,13 +1107,13 @@ Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV 
 ```{r}
 # df ---------------------------------------------------
 
-list.files(path="./(Figure 3) PREE_LowUS_10percent", pattern=".csv$", recursive = TRUE)
-list.filenames <- list.files(path="./(Figure 3) PREE_LowUS_10percent", pattern = ".csv$", 
+list.files(path="./Figure_3_PREE_LowUS_10percent", pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(path="./Figure_3_PREE_LowUS_10percent", pattern = ".csv$", 
                              full.names=TRUE, recursive = TRUE)
 # delete the metadata from the list.filenames
 list.filenames <- list.filenames[!(str_detect(list.filenames, "metadata"))]
 list.filenames
-metadata <- read.csv("./(Figure 3) PREE_LowUS_10percent/metadata.csv")
+metadata <- read.csv("./Figure_3_PREE_LowUS_10percent/metadata.csv")
 list.data <- list()
 
 for (i in 1:length(list.filenames)) {
@@ -1126,7 +1126,7 @@ for (i in 1:length(list.filenames)) {
                                                                  ifelse(str_detect(list.filenames[[i]], "SR"), 16,
                                                                         24))))))
   )
-  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 54, -5)
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 52, -5)
   #remove the first and last characters 
   list.data[[i]] <- dplyr::select(list.data[[i]], -c(Animal, Group))
 }
@@ -1671,8 +1671,8 @@ Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV 
 ```{r}
 # df ---------------------------------------------------
 
-list.files(path="./(Figure 4B-C) One FC", pattern=".csv$", recursive = TRUE)
-list.filenames <- list.files(path="./(Figure 4B-C) One FC", pattern = ".csv$", 
+list.files(path="./Figure_4B-C_OneFC", pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(path="./Figure_4B-C_OneFC", pattern = ".csv$", 
                              full.names=TRUE, recursive = TRUE)
 # delete the metadata from the list.filenames
 list.data <- list()
@@ -1685,7 +1685,7 @@ for (i in 1:length(list.filenames)) {
                                                            ifelse(str_detect(list.filenames[[i]], "SR"), 16,
                                                                   24))))
   )
-  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 3, -5)
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 21, -5)
 
 }
 
@@ -1897,8 +1897,8 @@ Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV 
 ```{r}
 # df ---------------------------------------------------
 
-list.files(path="./(Figure 4E-F) Interpolated Extinction", pattern=".csv$", recursive = TRUE)
-list.filenames <- list.files(path="./(Figure 4E-F) Interpolated Extinction", pattern = ".csv$", 
+list.files(path="./Figure_4E-F_Interpolated Extinction", pattern=".csv$", recursive = TRUE)
+list.filenames <- list.files(path="./Figure_4E-F_Interpolated Extinction", pattern = ".csv$", 
                              full.names=TRUE, recursive = TRUE)
 # delete the metadata from the list.filenames
 list.data <- list()
