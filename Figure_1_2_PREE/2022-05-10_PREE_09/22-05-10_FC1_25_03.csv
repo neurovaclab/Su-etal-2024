@@ -1,0 +1,40 @@
+"Date :",05/11/22 10:59:03
+"Motion Threshold (au):",18
+"Detection Method:","Linear"
+"Min Freeze Duration (f):",30
+
+
+
+Component Details
+"Component Name","Start Time","Duration (s)","Start Frame","Duration Frames"
+"pre-tone"," 0:00:00.000",290,0,8700
+"tone 01"," 0:04:50.000",25,8700,750
+"tone 02"," 0:08:10.000",25,14700,750
+"tone 03"," 0:12:05.000",25,21750,750
+"post-tone"," 0:12:30.000",180,22500,5400
+
+"Experiment","Trial","Box","Animal","Group","Component Name","Freeze Cnt","Time Freezing","Pct Total Time Freezing","Pct Component Time Freezing","Avg Motion Index","Min Motion Index","Max Motion Index"
+"VF051022_FC1","4",Chamber 1,"","","pre-tone",0,0.000,0.00,0.00,196.27,0,1107
+"VF051022_FC1","4",Chamber 1,"","","tone 01",0,0.000,0.00,0.00,225.35,0,1020
+"VF051022_FC1","4",Chamber 1,"","","tone 02",2,2.033,0.22,8.13,85.24,0,595
+"VF051022_FC1","4",Chamber 1,"","","tone 03",3,17.267,1.86,69.07,37.73,0,957
+"VF051022_FC1","4",Chamber 1,"","","post-tone",36,84.200,9.05,46.78,38.56,0,3192
+
+"VF051022_FC1","4",Chamber 2,"","","pre-tone",0,0.000,0.00,0.00,261.03,0,1445
+"VF051022_FC1","4",Chamber 2,"","","tone 01",0,0.000,0.00,0.00,225.52,0,1277
+"VF051022_FC1","4",Chamber 2,"","","tone 02",1,1.100,0.12,4.40,157.45,0,776
+"VF051022_FC1","4",Chamber 2,"","","tone 03",3,16.333,1.76,65.33,40.01,0,653
+"VF051022_FC1","4",Chamber 2,"","","post-tone",28,99.300,10.68,55.17,48.54,0,2348
+
+"VF051022_FC1","4",Chamber 3,"","","pre-tone",0,0.000,0.00,0.00,200.59,0,1385
+"VF051022_FC1","4",Chamber 3,"","","tone 01",0,0.000,0.00,0.00,211.65,0,1180
+"VF051022_FC1","4",Chamber 3,"","","tone 02",1,1.400,0.15,5.60,95.86,0,827
+"VF051022_FC1","4",Chamber 3,"","","tone 03",4,7.333,0.79,29.33,80.79,0,789
+"VF051022_FC1","4",Chamber 3,"","","post-tone",26,64.567,6.94,35.87,39.55,0,4938
+
+"VF051022_FC1","4",Chamber 4,"","","pre-tone",0,0.000,0.00,0.00,239.24,0,1311
+"VF051022_FC1","4",Chamber 4,"","","tone 01",0,0.000,0.00,0.00,269.19,0,1594
+"VF051022_FC1","4",Chamber 4,"","","tone 02",3,3.867,0.42,15.47,47.60,0,398
+"VF051022_FC1","4",Chamber 4,"","","tone 03",5,20.200,2.17,80.80,7.76,0,219
+"VF051022_FC1","4",Chamber 4,"","","post-tone",27,84.067,9.04,46.70,33.47,0,2910
+
