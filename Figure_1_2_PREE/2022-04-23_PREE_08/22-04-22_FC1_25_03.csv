@@ -1,0 +1,28 @@
+"Date :",04/27/22 13:42:31
+"Motion Threshold (au):",18
+"Detection Method:","Linear"
+"Min Freeze Duration (f):",30
+
+
+
+Component Details
+"Component Name","Start Time","Duration (s)","Start Frame","Duration Frames"
+"pre-tone"," 0:00:00.000",290,0,8700
+"tone 01"," 0:04:50.000",25,8700,750
+"tone 02"," 0:08:10.000",25,14700,750
+"tone 03"," 0:12:05.000",25,21750,750
+"post-tone"," 0:12:30.000",180,22500,5400
+
+"Experiment","Trial","Box","Animal","Group","Component Name","Freeze Cnt","Time Freezing","Pct Total Time Freezing","Pct Component Time Freezing","Avg Motion Index","Min Motion Index","Max Motion Index"
+"VF042322_FC1","4",Chamber 1,"","","pre-tone",0,0.000,0.00,0.00,206.87,0,1262
+"VF042322_FC1","4",Chamber 1,"","","tone 01",1,1.100,0.12,4.40,147.53,0,512
+"VF042322_FC1","4",Chamber 1,"","","tone 02",5,17.933,1.93,71.73,15.52,0,278
+"VF042322_FC1","4",Chamber 1,"","","tone 03",3,22.933,2.47,91.73,2.59,0,122
+"VF042322_FC1","4",Chamber 1,"","","post-tone",24,116.900,12.57,64.94,37.32,0,3390
+
+"VF042322_FC1","4",Chamber 2,"","","pre-tone",2,2.400,0.26,0.83,169.04,0,1635
+"VF042322_FC1","4",Chamber 2,"","","tone 01",0,0.000,0.00,0.00,212.38,0,1229
+"VF042322_FC1","4",Chamber 2,"","","tone 02",2,2.833,0.30,11.33,178.21,0,830
+"VF042322_FC1","4",Chamber 2,"","","tone 03",5,7.933,0.85,31.73,65.18,0,667
+"VF042322_FC1","4",Chamber 2,"","","post-tone",4,5.533,0.59,3.07,149.62,0,1187
+

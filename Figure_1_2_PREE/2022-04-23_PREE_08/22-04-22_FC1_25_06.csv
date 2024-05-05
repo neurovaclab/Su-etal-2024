@@ -1,0 +1,37 @@
+"Date :",04/27/22 13:41:54
+"Motion Threshold (au):",18
+"Detection Method:","Linear"
+"Min Freeze Duration (f):",30
+
+
+
+Component Details
+"Component Name","Start Time","Duration (s)","Start Frame","Duration Frames"
+"pre-tone"," 0:00:00.000",180,0,5400
+"tone 01"," 0:04:50.000",25,8700,750
+"tone 02"," 0:06:05.000",25,10950,750
+"tone 03"," 0:08:10.000",25,14700,750
+"tone 04"," 0:10:05.000",25,18150,750
+"tone 05"," 0:11:20.000",25,20400,750
+"tone 06"," 0:12:05.000",25,21750,750
+"post-tone"," 0:12:30.000",180,22500,5400
+
+"Experiment","Trial","Box","Animal","Group","Component Name","Freeze Cnt","Time Freezing","Pct Total Time Freezing","Pct Component Time Freezing","Avg Motion Index","Min Motion Index","Max Motion Index"
+"VF042322_FC1","2",Chamber 1,"","","pre-tone",1,1.033,0.11,0.57,259.14,0,1503
+"VF042322_FC1","2",Chamber 1,"","","tone 01",0,0.000,0.00,0.00,137.77,0,566
+"VF042322_FC1","2",Chamber 1,"","","tone 02",3,5.167,0.56,20.67,147.14,0,842
+"VF042322_FC1","2",Chamber 1,"","","tone 03",4,8.533,0.92,34.13,42.14,0,374
+"VF042322_FC1","2",Chamber 1,"","","tone 04",3,18.100,1.95,72.40,18.77,0,611
+"VF042322_FC1","2",Chamber 1,"","","tone 05",1,23.867,2.57,95.47,1.53,0,133
+"VF042322_FC1","2",Chamber 1,"","","tone 06",4,22.533,2.42,90.13,2.15,0,153
+"VF042322_FC1","2",Chamber 1,"","","post-tone",12,159.433,17.14,88.57,19.46,0,2464
+
+"VF042322_FC1","2",Chamber 2,"","","pre-tone",0,0.000,0.00,0.00,252.42,0,1494
+"VF042322_FC1","2",Chamber 2,"","","tone 01",0,0.000,0.00,0.00,179.84,0,748
+"VF042322_FC1","2",Chamber 2,"","","tone 02",0,0.000,0.00,0.00,168.29,0,754
+"VF042322_FC1","2",Chamber 2,"","","tone 03",0,0.000,0.00,0.00,333.29,0,1182
+"VF042322_FC1","2",Chamber 2,"","","tone 04",0,0.000,0.00,0.00,313.68,0,1776
+"VF042322_FC1","2",Chamber 2,"","","tone 05",0,0.000,0.00,0.00,216.56,0,891
+"VF042322_FC1","2",Chamber 2,"","","tone 06",0,0.000,0.00,0.00,90.67,0,504
+"VF042322_FC1","2",Chamber 2,"","","post-tone",0,0.000,0.00,0.00,208.78,0,1784
+
