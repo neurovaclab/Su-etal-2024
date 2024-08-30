@@ -1,0 +1,3083 @@
+---
+title: 'Su et al., (2024) - Revised'
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+# Load packages
+```{r echo=TRUE, results = 'hide', message=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(afex)
+library(emmeans)
+library(pwr2)
+library(rstatix)
+library(viridis)
+```
+
+# 2024-09-21 - Update
+
+This code has been updated to reflect suggestions requested by reviewers regarding our analyses and presentation of the data. 
+
+* *Major updates include*:
+  + Wherever possible include individual data points per animal and denoting sex. Where this was not possible, we have added supplementary figures separating data by sex (see supplementary figures)
+  + Analyses of FC or FE acquisition has been changed. We now focus separate the analyses by within- and between-sessions (more details in text below).
+  + We now include analysis on the slope of FE acquisition curves
+
+
+# Fig 1. Testing the effect of partial reinforcement in extinction learning:  
+To characterize the partial reinforcement extinction effect in fear learning, we exposed mice to consistent reinforcement (3:3, CS:US pairs; 100% contingency) or partial reinforcement (6:3, CS:US pairs; 50% contingency) for two days followed by extinction training across three days, and recall tests at 48 hours and 30 days after the last day of extinction (Fig. 1A). Mice received CS duration of either 10 or 25 seconds during the two-day fear conditioning (FC) protocol.
+
+## Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+
+The following chunk reads-in  the CSV files for Fig.1-2 and merges them into one dataframe. 
+
+```{r echo=TRUE, results = 'hide', message=FALSE}
+# Create a vector with each filename from all the CSVs in the home directory,
+
+list.filenames <- list.files("./Fig1_Fig2", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+
+# These vectors will be used to create 3CS binned averages
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+# Use a loop to read-in data
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+#skip is used to remove the header data from the orifinal files
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*03.csv$"), 15,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*06.csv$"), 18,
+                                             ifelse(str_detect(list.filenames[[i]], "FC\\w*12.csv$"), 24,
+                                                    ifelse(str_detect(list.filenames[[i]], "ER"), 16,
+                                                           ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                  24)))))
+  )
+#Store the filename as a column since it contains experiment date and session type
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 32, -5)
+
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>%  #collapse separate items in list into one
+  filter(Trial != "NA") %>% #remove empty rows
+  separate(col=Animal, into = c("Strain", "Sex", "Cage", "Animal"), sep = "-") %>% # separate existing columns as indicated below
+  separate(col=Group, into = c("CS_num", "Contingency", "CS_dur", "FE_context"), sep = "-") %>%
+  separate(col=ExpDetails, into = c("Date", "Exp_Type", "Unused"), sep="_") %>% 
+  mutate(
+    id = paste(Strain, Sex, Cage, Animal, sep="_"), #add a column with an animal ID
+    Trials = ifelse(CS_num == "12" & Contingency == "050", "6", #add a column indicating the # of CS:US pairings
+              ifelse(CS_num == "06" & Contingency == "100", "6",
+               ifelse(CS_num == "06" & Contingency == "050", "3",
+                ifelse(CS_num == "03" & Contingency == "100", "3", 
+                 ifelse(CS_num == "03" & Contingency == "050", "Rev", "NA"
+                                       ))))),
+    #CS refers to the tones that were paired with a US. This column is only used for stats (not graphing)
+    CS= ifelse(Trials== "3" & str_detect(Exp_Type, "FC") & Contingency == "100", Component.Name, 
+         ifelse(Trials== "3" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 01", "tone 01",
+          ifelse(Trials== "3" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 03", "tone 02",
+           ifelse(Trials== "3" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 06", "tone 03", 
+                
+        ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "100", Component.Name,
+         ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 02" & Exp_Type == "FC1", "tone 01",
+          ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 04" & Exp_Type == "FC1", "tone 02",
+           ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 07" & Exp_Type == "FC1", "tone 03",
+            ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 08" & Exp_Type == "FC1", "tone 04",
+             ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 09" & Exp_Type == "FC1", "tone 05",
+              ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 11" & Exp_Type == "FC1", "tone 06",
+               ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 01" & Exp_Type == "FC2", "tone 01",
+                ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 04" & Exp_Type == "FC2", "tone 02",
+                 ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 07" & Exp_Type == "FC2", "tone 03",
+                  ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 08" & Exp_Type == "FC2", "tone 04",
+                   ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 09" & Exp_Type == "FC2", "tone 05",
+                    ifelse(Trials== "6" & str_detect(Exp_Type, "FC") & Contingency == "050" & Component.Name == "tone 12" & Exp_Type == "FC2", "tone 06",  
+                
+                           ifelse(str_detect(Exp_Type, "FC", negate=TRUE), Component.Name, NA
+                           
+                                           )))))))))))))))))),
+            #As indicated above, for certain graphs/analysis, the freezing was averaged in bins of 3 CS
+            Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                      ifelse(Component.Name %in% bin1, "1",
+                             ifelse(Component.Name %in% bin2, "2",
+                                    ifelse(Component.Name %in% bin3, "3",
+                                           ifelse(Component.Name %in% bin4, "4", "Post")))))
+  )
+    
+
+df<-as.data.frame(list.data) %>% #Convert list into a dataframe
+  relocate(20:26, .after = 12) #Relocate metadata such that they precede data
+
+#The code below removes animals whose freezing on FC2 was below 15% time freezing, this was done since the focus of the study is on extinction 
+Remove <- df %>% #Create a dataframe  with only the animals whose FC2 freezing was below 15%
+  filter(Exp_Type== "FC2") %>% 
+  group_by(id)%>% 
+  summarise(mean_FC2_freezing = mean(Pct.Component.Time.Freezing)) %>% 
+  filter(mean_FC2_freezing < 15) 
+
+Remove <- unlist(Remove$id) #keep only the list of animals (as a vector)
+
+`%notin%` <- Negate(`%in%`) #Function for negating the %in% function (source: https://www.r-bloggers.com/2018/07/the-notin-operator/)
+
+df <- df %>% 
+  filter(id %notin% Remove) #filter for animals not in the Remove vector (i.e. filtering for animals freezing more than 15% on FC2)
+
+rm(list=setdiff(ls(), "df")) #remove everything from environment except the df
+df<- df %>% 
+  drop_na(Trial, Strain, Experiment)  
+
+#write_csv(df, "PREE_df.csv") #if desired, uncomment this to create a CSV file of all the data
+```
+
+
+## B. Fear Acquisition  
+Compare the average percent time freezing during CS presentations across the two days of FC training. Data was analyzed in two ways:  
+  
+  (1) Within-session freezing: This is a CS+ (3) X Contingency (2) X CS-duration. CS+ refers to CS:US pairs and is a within-subjects variable. Contingency and CS-duration are between subjects variables. Each FC day (1-2) is analyzed separately.
+  (2) Between-session freezing: This compares composite freezing accross the two FC days. The model is FC-day (2) X Contingency (2) X CS-duration. FC Day is a within-subjects variable and is the average of all CS in a session (whether or not they were paired with US). Contingency and CS-duration are between subjects variables. 
+
+## B1. Within-session FC
+
+### B1 - Dataframe
+Below a dataframe is created for the analysis of the CS paired with the US only (FC_id_1.1) 
+```{r}
+#Create a dataframe with averages for each animal for each CS. Note, for the statistical analysis we used "CS" not "Component.Name", the difference is that Component.Name is a column containing all the CS tones whereas "CS" is a column containing only the tones paired with a US
+FC_id_1.1 <- df %>% 
+  filter(str_detect(Exp_Type, "FC"),
+         str_detect(Trials, "3")) %>%
+  group_by(id, CS_dur, Contingency, Sex, Component.Name, Exp_Type, CS) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            )
+
+#Create a dataframe with averages for each experimental group for each CS
+FC_ave_1.1 <- FC_id_1.1 %>% 
+  group_by(CS_dur, Contingency,Component.Name, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### B1 - Graph
+Plot data by CS 
+```{r}
+Fig1.B1 <- 
+  ggplot(FC_ave_1.1, aes(x=interaction(Component.Name), y=group_mean_freezing, group=Contingency, color=Contingency)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur * Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se, width = 0.4), linewidth=0.3) +
+  ylim(0,100) +
+  scale_x_discrete(limits=c("pre-tone", "tone 01", "tone 02", "tone 03",  "tone 04", "tone 05", "tone 06","post-tone"),
+                   labels=c("p", "1", "2", "3", "4", "5", "6", "p")) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() + 
+  theme(
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig1.B1
+
+# ggsave("Fig1B1.pdf", plot = Fig1.B1, width = 2, height = 2, units = "in")
+
+```
+
+### B1 - Stats
+Sex was originally in the statistical model; however, considering lack of consistent sex-specific effects observed, it was dropped from models. Nonetheless, individuals points are plotted showing sex whenever possible. WHere individual data points are not present, see the Supplementary figs that segregate the acquisition curves by sex.
+
+The acquisition data was analyzed using separate models for within-session acquisition (i.e. comparing changes in freezing by CS across one training session) and between-session (i.e. comparing differences in freezing per training session).
+
+Model 1.B1 (Fig1B-1) - "within session learning". This uses only CS paired with US (i.e. 3 total, CS 1-3 for 100% Contingency, and CS1,3,6 for 50% Contingency). Each FC day was analyzed using a separate ANOVA.
+```{r}
+# Analysis of FC1 Data
+m1b1_FC1 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m1b1_FC1 <-nice(m1b1_FC1)
+kable(nice_m1b1_FC1, caption = '<b>Figure 1.B1: FC1 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n1b1.1_FC1 <- emmeans(m1b1_FC1, ~ CS)
+n1b1.1_FC1_pairs<- pairs(n1b1.1_FC1, simple="each")
+kable(n1b1.1_FC1_pairs[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') 
+
+#######################
+# Analysis of FC2 Data
+m1b1_FC2 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m1b1_FC2 <-nice(m1b1_FC2)
+kable(nice_m1b1_FC2, caption = '<b>Figure 1.B1: FC2 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Contrast for CS
+n1b1.1_FC2 <- emmeans(m1b1_FC2, ~ CS)
+n1b1.1_pairs_FC2<- pairs(n1b1.1_FC2, simple="each")
+kable(n1b1.1_pairs_FC2[1], caption = '<b>Figure 1.B1: Simple contrasts for CS Day</b>') 
+#Contrast for CS duration
+n1b1.2_FC2 <- emmeans(m1b1_FC2, ~ CS_dur)
+n1b1.2_pairs_FC2<- pairs(n1b1.2_FC2, simple="each")
+kable(n1b1.2_pairs_FC2[1], caption = '<b>Figure 1B-1: Simple contrasts for CS durationy</b>')  
+```
+
+## B2. Between-Session FC
+
+### B2 - Dataframe
+```{r}
+#Create a dataframe with CS freezing averaged for each experimental group 
+FC_id_1.2 <- FC_id_1.1 %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate=TRUE)) %>% 
+  group_by(id, Sex, CS_dur, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC_ave_1.2 <- FC_id_1.2 %>% 
+  group_by(CS_dur, Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+```
+
+### B2 - Graph
+Between-sessions comparison: Plot data by group, averaging all CS per FC day
+```{r}
+Fig1.B2 <- ggplot(FC_ave_1.2,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur, ncol=1) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=FC_id_1.2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC1.100","FC2.100", "FC1.050", "FC2.050"),
+                    labels= c("FC1", "FC2", "FC1", "FC2")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig1.B2
+ # ggsave("Fig1B2.pdf", plot = Fig1.B2, width = 1, height = 2, units = "in")
+```
+
+
+### B2 - Stats
+Model 1.B2 (Fig1B-2) - "Between-session learning". This uses all CS averaged per session (i.e. 3 total for 100% Contingency, and 6 for 50% Contingency) and compares freezing across FC training session.
+```{r}
+m1b2 <- FC_id_1.2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m1b2  <-nice(m1b2 )
+kable(nice_m1b2, caption = '<b>Figure 1.B2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## C. FC Recall
+Recall was operationally defined as the proportion of time freezing between two CS epochs: (1) CS freezing on FC Day 2 and (2) the first four CS presentations on Extinction Day 1. 
+
+### C - Dataframe
+```{r}
+E1_Session1_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E1"),
+         str_detect(Exp_Type, "ER", negate = TRUE),
+         str_detect(Trials, "3"),
+         str_detect(Component.Name,  "tone 01|tone 02|tone 03|tone 04")) %>% 
+  group_by(id, CS_dur, Contingency, Exp_Type, Sex) %>%
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+E1_Session1_ave_1 <- E1_Session1_id_1 %>% 
+  group_by(CS_dur, Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC2_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "FC2"),
+         str_detect(Trials, "3")) %>% 
+  group_by(id, CS_dur, Contingency, Exp_Type, Sex) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+FC2_ave_1 <- FC2_id_1 %>% 
+  group_by(CS_dur, Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+
+E1_FC2_id_1 <-rbind(E1_Session1_id_1, FC2_id_1)
+
+E1_FC2_ave_1 <-rbind(E1_Session1_ave_1, FC2_ave_1)
+```
+
+### C - Graph
+```{r}
+Fig1C <- ggplot(
+  E1_FC2_ave_1,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=E1_FC2_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC2.100", "E1.100", "FC2.050", "E1.050"),
+                    labels= c("FC2", "E1\n (CS1-4)", "FC2", "E1\n (CS1-4)")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig1C
+# ggsave("Fig1C.pdf", plot = Fig1C, width = 2, height = 2, units = "in")
+```
+
+### C - Stats
+Model 1.C
+- Exp_Type in this model refers to each of the two CS epochs described above
+```{r}
+m1c <- E1_FC2_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = "Exp_Type",
+         data = .)
+
+#ANOVA table
+nice_m1c <-nice(m1c)
+kable(nice_m1c, caption = '<b>Figure 1C: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left", font_size = 14)
+
+#Post-hoc analyses
+n1c <- emmeans(m1c, ~ Exp_Type * CS_dur)
+
+#Contrast for CS x FC Day interaction
+n1c_pairs<- pairs(n1c, simple="each")
+n1c_pairs
+
+kable(n1c_pairs[], caption = '<b>Figure 1C: Simple contrasts for CE-Epoch x CS durationy</b>')  
+```
+
+## D. Extinction Acquisition
+
+## D1. Within-Session Extinction
+### D1 - Dataframe
+To evaluate the effect of partial reinforcement on fear extinction acquisition, mice were exposed to 12 unreinforced CS presentations for three consecutive days (E1, E2, E3) in a novel context (Context B). Percent time freezing was averaged in bins composed of 3CS presentations. 
+```{r}
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E"),
+         str_detect(Trials, "3"),
+         str_detect(Experiment, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, CS_dur, Contingency, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Exp_Type, Bin, CS_dur, Contingency) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+  
+```
+
+### D1 - Graph
+```{r}
+Fig1.D1 <-
+  ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=interaction(Bin),
+      y=group_mean_freezing,
+      group = Contingency, color= Contingency, fill=Contingency)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur * Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  scale_shape(solid = FALSE) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  scale_x_discrete(limits=c("Pre", "1", "2", "3", "4", "Post"),
+                   labels=c("p", "1", "2", "3", "4", "p")) +
+  ylim(0,100) +
+  labs(x = "Bin", y = "% Time Freezing") +
+  theme_bw() +
+    theme(
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 12, color="black"),
+        axis.text.y = element_text(size = 12, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+  
+Fig1.D1
+# ggsave("Fig1D1.pdf", plot = Fig1.D1, width = 2.5, height = 2.5, units = "in")
+```
+
+### D1 - Stats 
+Model 1.D1 (Fig1D-1) - The acquisition data was analyzed using separate models for within-session acquisition (i.e. comparing changes in freezing by CS across one training session) and between-session (i.e. comparing differences in freezing per training session).
+
+####Model 1.D1 (Fig1D-1) - "within session learning". This compares mean binned-CS freezing each FE day
+```{r}
+#FE1 - Mean freezing analysis
+m1.d1.FE1 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("Bin"),
+         data = .)
+
+##ANOVA table
+nice_m1.d1.FE1 <-nice(m1.d1.FE1)
+kable(nice_m1.d1.FE1, caption = '<b>Figure 1.D1-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+##Post-hoc analyses
+n1.d1.FE1 <- emmeans(m1.d1.FE1, ~ CS_dur * Bin)
+n1bd.1_pairs_FE1<- pairs(n1.d1.FE1, simple="each")
+
+##Simple contrasts for Bin
+kable(n1bd.1_pairs_FE1[], caption = '<b>Figure 1.D1-E1: Simple Contrasts CS bin by CS duration</b>')
+
+###### FE2 ############
+m1.d1.FE2 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("Bin"),
+         data = .)
+
+#ANOVA table
+nice_m1.d1.FE2 <-nice(m1.d1.FE2)
+kable(nice_m1.d1.FE2, caption = '<b>Figure 1.D1-E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Post-hoc model #1
+n1.d1.FE2 <- emmeans(m1.d1.FE2, ~ Contingency * Bin)
+n1.d1.FE2_pairs<- pairs(n1.d1.FE2, simple="each")
+
+# #Simple contrasts for Contingency (no sig effects)
+# kable(n1.d1.FE2_pairs[1], caption = '<b>Figure 1.D1-E2: Simple Contrasts by CS bin</b>')
+
+kable(n1.d1.FE2_pairs[], caption = '<b>Figure 1.D1-E2: Simple Contrasts by CS bin</b>')
+
+#Post-hoc model 
+n2.d1.FE2 <- emmeans(m1.d1.FE2, ~ Contingency * Bin)
+n2.d1.FE2_pairs<- pairs(n2.d1.FE2, simple="each")
+
+# #Simple contrasts
+ kable(n2.d1.FE2_pairs[], caption = '<b>Figure 1.D1-E2: Simple Contrasts CS bin by Contingency</b>')
+
+###### FE3 ############
+m1.d1.FE3 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("Bin"),
+         data = .)
+
+#ANOVA table
+nice_m1.d1.FE3 <-nice(m1.d1.FE3)
+kable(nice_m1.d1.FE3, caption = '<b>Figure 1.D1-E3: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Post-hoc model #1
+n1.d1.FE3 <- emmeans(m1.d1.FE3, ~ Bin)
+n1.d1.FE3_pairs<- pairs(n1.d1.FE3, simple="each")
+
+#Simple contrasts for Bin
+kable(n1.d1.FE3_pairs[], caption = '<b>Figure 1.D1-E3: Simple Contrasts by CS bin</b>')
+
+#Post-hoc model #2
+n2.d1.FE3 <- emmeans(m1.d1.FE3, ~ Contingency * CS_dur)
+n2.d1.FE3_pairs<- pairs(n2.d1.FE3, simple="each")
+
+#One sig effect. Not pertinent to hypothesis tested. 
+kable(n2.d1.FE3_pairs[], caption = '<b>Figure 1.D1-E3: Simple Contrasts Contingency by CS_duration</b>')
+```
+
+#### Comparing slope of FE acquisition using linear contrasts
+We expressed the contrast in units that represent the slope of the best-fitting line in the relationship between the dependent (freezing) and independent variables. 
+
+To find contrast weights that will yield the slope, we first weighted the freezing values by a standardized CS# . To standardize the CS, we demean them (ie  get them to sum to zero by subtracting the mean from each CS value [1-12]). Next we divided each demeaned CS# by the sum of squares of all the demeaned CSs. Finally, to create weighted freezing values we multiplied %freezing per CS, per Animal, by the standardize CS. This creates a linear contrast for each animal (note this is the same than creating a linear regression per animal) and the sum of the weighted CS-freezing values gives us the slope. See Ch 33 in Rosenthal, R., Rosnow, R. L., & Rubin, D. B. (2000). Contrasts and effect sizes in behavioral research: A correlational approach. Cambridge University Press.
+
+```{r}
+#Weights for FE-CS
+FE_dm = mean(c(1:12)) - c(1:12) #Demeaned CSs
+FE_dm_ss = sum((FE_dm)^2) #Sum of squares of demeaned CSs
+weightsFE = FE_dm/FE_dm_ss #Standardized CS scores
+weightsFE
+
+# Creating dataframe for slope analysis
+EXT_weighted_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E"),
+         str_detect(Trials, "3"),
+         str_detect(Experiment, "ER", negate = TRUE),
+         str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE))
+  
+EXT_weighted_id_1$weights <- weightsFE
+
+EXT_weighted_id_1 <- EXT_weighted_id_1 %>% 
+  mutate(weighted_FE = weights * Pct.Component.Time.Freezing)
+
+Ext_slope <- EXT_weighted_id_1 %>% 
+  group_by(id, Contingency, CS_dur, Exp_Type) %>% 
+  summarise(slope= sum(weighted_FE))
+
+### E1
+m1.slope.FE1 <- Ext_slope %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE1 <-nice(m1.slope.FE1)
+kable(nice_m1.slope.FE1, caption = '<b>Contrast for Slope-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+### E2
+m1.slope.FE2 <- Ext_slope %>%
+   filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE2 <-nice(m1.slope.FE2)
+kable(nice_m1.slope.FE2, caption = '<b>FContrast for Slope-E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+### E3
+m1.slope.FE3 <- Ext_slope %>%
+   filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE3 <-nice(m1.slope.FE3)
+kable(nice_m1.slope.FE3, caption = '<b>FContrast for Slope-E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## D2. Between-Session Extinction
+We  investigated whether partial reinforcement could affect 24-hr consolidation of extinction learning. To do this we compared freezing across the three extinction sessions (i.e. between-session extinction), for this we averaged percent time freezing across all CS presentations per extinction training day.
+
+### D2 - Dataframe
+```{r}
+EXT_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Trials, "3"),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, CS_dur, Contingency) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_ave_1 <- EXT_id_1 %>% 
+  group_by(Exp_Type, CS_dur, Contingency) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### D2 - Graph
+```{r}
+Fig1.D2 <-
+  ggplot(
+  EXT_ave_1,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur) +
+  geom_bar(stat = "identity", alpha=0.25, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=EXT_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1) +
+    scale_shape(solid = FALSE) +
+  scale_x_discrete(limits=c("E1.100", "E2.100", "E3.100",
+                            "E1.050", "E2.050", "E3.050"),
+                   labels=c("E1", "E2", "E3", "E1", "E2", "E3")) +
+  ylim(0,100) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig1.D2
+
+# ggsave("Fig1D2.pdf", plot = Fig1.D2, width = 3, height = 1.5, units = "in")
+```
+
+### D2 - Stats
+```{r}
+m1.d2.FE <- EXT_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m1.d2.FE <-nice(m1.d2.FE)
+kable(nice_m1.d2.FE, caption = '<b>Figure 1.D2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n1.d2 <- emmeans(m1.d2.FE, ~ Exp_Type * CS_dur)
+
+#Simple contrasts for Extinction Day
+n1.d2_pairs <- pairs(n1.d2, simple="each")
+kable(n1.d2_pairs[], caption = '<b>Figure 1.D2-E1:Simple Contrasts for FE Day and CS Dur</b>')
+```
+
+## F. Extinction Recall
+Extinction recall was measured at recent (48 h) or remote (30 d) timepoints. Mice were returned to Context B and received a tone test (4 CS presentations) 48 hours and 30 days after the last day of extinction training. In addition to comparing experimental groups at each time point, we also compared percent time freezing within-subjects between the recent and remote time points to assess the level of spontaneous recovery, or the return of conditioned fear with the passage of time
+
+Note: in the data we called the 48h tone test "ER" and the 30d tone-test "SR"
+
+### F - Dataframe
+```{r}
+ER_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Trials, "3"),
+         str_detect(Exp_Type, "ER")) %>% 
+  group_by(id, Sex, CS_dur, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+ER_ave_1 <- ER_id_1 %>% 
+  group_by(CS_dur, Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+SR_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Trials, "3"),
+         str_detect(Exp_Type, "SR")) %>% 
+  group_by(id, Sex, CS_dur, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+SR_ave_1 <- SR_id_1 %>% 
+  group_by(CS_dur, Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+ER_SR_id_1 <-rbind(ER_id_1, SR_id_1)
+ER_SR_ave_1 <-rbind(ER_ave_1, SR_ave_1)
+
+```
+
+### F - Graph
+```{r}
+Fig1F <-
+  ggplot(
+  ER_SR_ave_1,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  facet_wrap(~CS_dur) +
+  geom_bar(stat = "identity", alpha=0.5, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=ER_SR_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1 ) +
+  scale_shape(solid = FALSE) +
+  scale_x_discrete(limits= c("ER.100", "SR.100", "ER.050", "SR.050"),
+                  labels= c("2d", "30d", "2d", "30d")) +
+  ylim(0,100) +
+  labs(x = "Day", y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) + 
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig1F
+#ggsave("Fig1F.pdf", plot = Fig1F, width = 3, height = 1.5, units = "in")
+```
+
+### F - Stats
+```{r}
+m1f <- ER_SR_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "CS_dur"),
+         within = "Exp_Type",
+         data = .)
+
+nice_m1f <- nice(m1f)
+
+#ANOVA table
+kable(nice_m1f, caption = '<b>Figure 1F Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n1f <- emmeans(m1f, ~Exp_Type)
+n1f_ExpType <- pairs(n1f, simple = "Exp_Type")
+
+#Simple contrasts for ExpType
+kable(n1f_ExpType, caption = '<b>Figure 1F: Simple Contrast for Tone-test day')
+```
+## END of Fig 1
+
+# Fig 2. No effect of partial reinforcement on fear extinction acquisition or consolidation with increased CS:US trials during fear conditioning:  
+
+Since we did not observe a PREE in experiments shown in Fig 1, we tested whether an increased number of CS:US trials was necessary to reveal extinction resistance using partial reinforcement (Brimer and Dockrill, 1966). To do this, we repeated the experiments (as in Fig. 1A) but doubled the number of CS:US trials (12:6 CS:US pairs for 50% contingency; 6:6 CS:US pairs for 100% contingency, Fig. 2A). Given that CS duration did not significantly alter fear extinction in prior experiments (see Fig. 1E and F), we used only one CS duration (10 sec) for all trials. Otherwise, all the graphing and data analysis is exactly as it was for Fig 1.
+
+
+## B. Fear Acquisition  
+Compare the average percent time freezing during CS presentations across the two days of FC training 
+
+## B1 - Within-session FC
+
+### B1 - Dataframe
+```{r}
+#Create a dataframe with averages for each animal for each CS
+FC_id_2.1 <- df %>%  
+  filter(
+         str_detect(Exp_Type, "FC"),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6")) %>% 
+  group_by(id, Contingency, Sex, Component.Name, Exp_Type, CS) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+
+#Create a dataframe with averages for each experimental group for each CS
+FC_ave_2.1 <- FC_id_2.1 %>% 
+  group_by(Contingency, Component.Name, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+```
+
+### B1 - Graph
+```{r}
+Fig2B.1 <- 
+  ggplot(FC_ave_2.1, aes(x=interaction(Component.Name), y=group_mean_freezing, group=Contingency, color=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se, width = 0.4), linewidth=0.3) +
+  ylim(0,100) +
+  scale_x_discrete(limits=c("pre-tone", "tone 01", "tone 02", "tone 03",  "tone 04", "tone 05", "tone 06", "tone 07", "tone 08", "tone 09", "tone 10", "tone 11", "tone 12", "post-tone"),
+                   labels=c("p", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "p")) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() + 
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig2B.1
+
+#ggsave("Fig2B-1.pdf", plot = Fig2B.1, width = 2.5, height = 2, units = "in")
+```
+
+### B1 - Stats
+```{r}
+# ANOVA model 1 (Fig1B-1) - uses only CS paired with US (i.e. 3 total, CS 1-3 for 100% Contingency, and CS1,3,6 for 50% Contingency)
+
+# Analysis of FC1 Data
+m2b1_FC1 <- FC_id_2.1 %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03|tone 04|tone 05|tone 06") &
+          Exp_Type == "FC1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m2b1_FC1 <-nice(m2b1_FC1)
+kable(nice_m2b1_FC1, caption = '<b>Figure 2-B1: Main FX for FC1</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+
+#Contrast for Contingency x CS interaction
+n2b1.1_FC1 <- emmeans(m2b1_FC1, ~ Contingency*CS)
+n2b1.1_pairs_FC1<- pairs(n2b1.1_FC1, simple="each")
+
+kable(n2b1.1_pairs_FC1[1], caption = '<b>Figure 1B-1: Simple contrasts ny Contingency</b>') 
+kable(n2b1.1_pairs_FC1[2], caption = '<b>Figure 1B-1: Simple contrasts by CS Day</b>') 
+
+#######################
+# Analysis of FC2 Data
+m2b1_FC2 <- FC_id_2.1 %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03|tone 04|tone 05|tone 06") &
+          Exp_Type == "FC2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m2b1_FC2 <-nice(m2b1_FC2)
+kable(nice_m2b1_FC2, caption = '<b>Figure 2-B1: Main FX for FC2</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+# Post-hoc analyses
+
+#Contrast for CS x FC Day interaction
+n2b1.1_FC2 <- emmeans(m2b1_FC2, ~ CS)
+n2b1.1_pairs_FC2<- pairs(n2b1.1_FC2, simple="each")
+
+kable(n2b1.1_pairs_FC2[1], caption = '<b>Figure 1B-1: Simple contrasts for Contingency by CS</b>') 
+```
+
+## B2 - Between-session FC
+
+### B2 - Dataframe
+```{r}
+#Create a dataframe with CS freezing averaged for each experimental group 
+FC_id_2.2 <- FC_id_2.1 %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate=TRUE)) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC_ave_2.2 <- FC_id_2.2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### B2 - Graph
+```{r}
+Fig2B.2 <- ggplot(FC_ave_2.2,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=FC_id_2.2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC1.100","FC2.100", "FC1.050", "FC2.050"),
+                    labels= c("FC1", "FC2", "FC1", "FC2")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig2B.2
+#ggsave("Fig2B-2.pdf", plot = Fig2B.2, width = 1, height = 2, units = "in")
+```
+
+### B2 - Stats
+```{r}
+# ANOVA model 2 (Fig1B-2) - uses all CS  (i.e. 3 total for 100% Contingency, and 6 for 50% Contingency)
+m1b2 <- FC_id_2.2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m1b2  <-nice(m1b2)
+kable(nice_m1b2, caption = '<b>Figure 2-B2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Contrast for Contingency
+n2b2.1 <- emmeans(m1b2, ~ Contingency)
+n2b2.1_pairs<- pairs(n2b2.1, simple="each")
+n2b2.1
+kable(n2b2.1_pairs[1], caption = '<b>Figure 2B-2: Simple contrasts for Contingency</b>') 
+
+#Contrast for FE Day
+n2b2.2 <- emmeans(m1b2, ~ Exp_Type)
+n2b2.2_pairs<- pairs(n2b2.2, simple="each")
+
+kable(n2b2.2_pairs[1], caption = '<b>Figure 2B21: Simple contrasts for FC Day</b>') 
+n2b2.2
+```
+
+## C. Fear Retrieval ----------------------------------------------------------
+Retrieval was evaluated as the proportion of time freezing between two CS epochs: (1) CS freezing on FC Day 2 and (2) the first four CS presentations on Extinction Day 1.  
+
+### C - Dataframe
+```{r}
+E1_Session1_id_2 <- df %>% 
+  filter(str_detect(Exp_Type, "E1"),
+         str_detect(Exp_Type, "ER", negate = TRUE),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6"),
+         str_detect(Component.Name,  "tone 01|tone 02|tone 03|tone 04")) %>% 
+  group_by(id, Contingency, Exp_Type, Sex) %>%
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+E1_Session1_ave_2 <- E1_Session1_id_2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC2_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "FC2"),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6")) %>% 
+  group_by(id, Contingency, Exp_Type, Sex) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+FC2_ave_2 <- FC2_id_2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+
+E1_FC2_ave_2 <-rbind(E1_Session1_ave_2, FC2_ave_2)
+
+E1_FC2_id_2 <-rbind(E1_Session1_id_2, FC2_id_2)
+E1_FC2_id_2 <- E1_FC2_id_2
+```
+
+### C - Graph
+```{r}
+Fig2C <- ggplot(
+  E1_FC2_ave_2,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=E1_FC2_id_2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC2.100", "E1.100", "FC2.050", "E1.050"),
+                    labels= c("FC2", "E1\n (CS1-4)", "FC2", "E1\n (CS1-4)")) +
+  ylim(0,100) +
+  theme_bw() +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+    theme(
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig2C
+#ggsave("Fig2C.pdf", plot = Fig2C, width = 1.5, height = 2, units = "in")
+```
+
+### C - Stats
+```{r}
+m2c <- E1_FC2_id_2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = "Exp_Type",
+         data = .)
+
+#ANOVA table
+nice_m2c <- nice(m2c)
+
+kable(nice_m2c, caption = '<b>Figure 2C: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## D. Extinction acquisition-----------------------------------------------
+
+### D1 - Within-session FE
+To evaluate the effect of partial reinforcement on fear extinction acquisition, mice were exposed to 12 unreinforced CS presentations for three consecutive days (E1, E2, E3) in a novel context (Context B). Percent time freezing was averaged in bins composed of 3CS presentations. 
+
+### D1 - Dataframe
+```{r}
+EXT_bin_id_2 <- df %>% 
+  filter(str_detect(Experiment, "E"),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6"),
+         str_detect(Experiment, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Contingency, Bin, Sex) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_2 <- EXT_bin_id_2 %>% 
+  group_by(Exp_Type, Bin, Contingency) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_2$Bin <- factor(EXT_bin_ave_2$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+```
+
+### D1 - Graph
+```{r}
+Fig2D.1 <-
+  ggplot(
+  data = subset(EXT_bin_ave_2, !is.na(Bin)),
+  aes(x=interaction(Bin),
+      y=group_mean_freezing,
+      group = Contingency, color= Contingency, fill=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  scale_shape(solid = FALSE) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  scale_x_discrete(limits=c("Pre", "1", "2", "3", "4", "Post"),
+                   labels=c("p", "1", "2", "3", "4", "p")) +
+  ylim(0,100) +
+  labs(x = "Bin", y = "% Time Freezing") +
+  theme_bw() +
+   theme(
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+  
+Fig2D.1
+
+#ggsave("Fig2D1.pdf", plot = Fig2D.1, width = 2, height = 2, units = "in")
+```
+
+### D1 - Stats
+```{r}
+######## E1
+m2d1.E1 <- EXT_bin_id_2 %>% 
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+  filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = c("Bin"),
+         data = .)
+
+nice_m2d1.E1 <- nice(m2d1.E1)
+
+kable(nice_m2d1.E1, caption = '<b>Figure 2-D1: E1 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n2d1.E1 <- emmeans(m2d1.E1, ~ Contingency * Bin)
+
+#Simple contrasts for Contingency X Bin
+pairs_n2d1.E1 <- pairs(n2d1.E1, simple="each")
+
+# By Contingency (no sig effects)
+ kable(pairs_n2d1.E1[1], caption = '<b>Figure 2D: Simple Contrasts for Contingency by bin</b>')
+
+# By Bin
+kable(pairs_n2d1.E1[2], caption = '<b>Figure 2D: E1 Simple Contrasts for Bin by Contingency</b>')
+
+######## E2
+m2d1.E2 <- EXT_bin_id_2 %>% 
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+  filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = c("Bin"),
+         data = .)
+
+nice_m2d1.E2 <- nice(m2d1.E2)
+
+kable(nice_m2d1.E2, caption = '<b>Figure 2-D1: E2 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n2d1.E2 <- emmeans(m2d1.E2, ~ Bin)
+
+#Simple contrasts for Contingency X Bin
+pairs_n2d1.E2 <- pairs(n2d1.E2, simple="each")
+
+# By Bin
+kable(pairs_n2d1.E2[1], caption = '<b>Figure 2D: E2 Simple Contrasts for Bin</b>')
+
+
+######## E3
+m2d1.E3 <- EXT_bin_id_2 %>% 
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+  filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = c("Bin"),
+         data = .)
+
+nice_m2d1.E3 <- nice(m2d1.E3)
+
+kable(nice_m2d1.E3, caption = '<b>Figure 2-D1: E3 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n2d1.E3 <- emmeans(m2d1.E3, ~  Bin)
+
+#Simple contrasts for Contingency X Bin
+pairs_n2d1.E3 <- pairs(n2d1.E3, simple="each")
+
+# By Bin
+kable(pairs_n2d1.E3[1], caption = '<b>Figure 2D: Simple Contrasts for Bin</b>')
+```
+
+#### FE Linear contrasts (i.e. contrast for slopes)
+We expressed the contrast in units that represent the slope of the best-fitting line in the relationship between the dependent (freezing) and independent variables. Note to linear regression users: this slope is identical to the one we would find using linear regression. A linear regression model is nothing more than a linear contrast.
+
+To find contrast weights that will yield the slope, we first weighted the freezing values by a standardized CS# . To standardize the CS, we demean them to get them to sum to zero (i.e. we subtracted the mean from each CS value [1-12]). Next we divided each demeaned CS# by the sum of squares of all the demeaned CSs. Finally, to create weighted freezing values we multiplied %freezing per CS by Animal by the standardize CS. This creates a linear contrast for each animal (note this is the same than creating a linear regression per animal) and the sum of the weighted CS-freezing values gives us the slope. 
+
+```{r}
+# Creating dataframe for slope analysis
+#Weights for FE-CS
+EXT_weighted_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Trials, "3"),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE))
+  
+EXT_weighted_id_2$weights <- weightsFE
+
+EXT_weighted_id_2 <- EXT_weighted_id_2 %>% 
+  mutate(weighted_FE = weights * Pct.Component.Time.Freezing)
+
+Ext_slope.2 <- EXT_weighted_id_2 %>% 
+  group_by(id, Contingency, CS_dur, Exp_Type) %>% 
+  summarise(slope= sum(weighted_FE))
+
+### E1
+m1.slope.FE1 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE1 <-nice(m1.slope.FE1)
+kable(nice_m1.slope.FE1, caption = '<b>Figure 2.Slope-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+### E2
+m1.slope.FE2 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE2 <-nice(m1.slope.FE2)
+kable(nice_m1.slope.FE2, caption = '<b>Figure 2.Slope-E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+### E3
+m1.slope.FE3 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m1.slope.FE3 <-nice(m1.slope.FE3)
+kable(nice_m1.slope.FE3, caption = '<b>Figure 2.Slope-E3: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## D2. Between-session Extinction ---------------------------------------------
+We  investigated whether partial reinforcement could affect 24-hr consolidation of extinction learning across the three extinction sessions. For this analysis we averaged percent time freezing across all CS presentations per extinction training day.  
+
+### D2 - Dataframe
+```{r}
+EXT_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6"),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, Contingency) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_ave_2 <- EXT_id_2 %>% 
+  group_by(Exp_Type, Contingency) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### D2 - Graph
+```{r}
+Fig2.D2 <-
+  ggplot(
+  EXT_ave_2,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  geom_bar(stat = "identity", alpha=0.25, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=EXT_id_2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1) +
+    scale_shape(solid = FALSE) +
+  scale_x_discrete(limits=c("E1.050", "E2.050", "E3.050",
+                            "E1.100", "E2.100", "E3.100"),
+                   labels=c("E1", "E2", "E3", "E1", "E2", "E3")) +
+  ylim(0,100) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+Fig2.D2
+
+#gsave("Fig2D2.pdf", plot = Fig2.D2, width = 1.5, height = 2, units = "in")
+```
+
+### D2 - Stats
+```{r}
+######## E1
+m2d2 <- EXT_id_2 %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = c("Exp_Type"),
+         data = .)
+
+nice_m2d2 <- nice(m2d2)
+
+kable(nice_m2d2, caption = '<b>Figure 2-D2: Between session FE Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n1d2 <- emmeans(m2d2, ~ Exp_Type)
+
+#Simple contrasts for Contingency X Bin
+pairs_n1d2 <- pairs(n1d2, simple="each")
+
+# By Bin
+kable(pairs_n1d2[1], caption = '<b>Figure 2D: Simple Contrasts for FE session</b>')
+```
+
+## E. Extinction Recall -------------------------------------------------------------
+Extinction recall was measured at recent (48 h) or remote (30 d) timepoints. Mice were returned to Context B and received a tone test (4 CS presentations) 48 hours and 30 days after the last day of extinction training. In addition to comparing experimental groups at each time point, we also compared percent time freezing within-subjects between the recent and remote time points to assess the level of spontaneous recovery, or the return of conditioned fear with the passage of time  
+
+### E - Dataframe
+```{r}
+ER_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6"),
+         str_detect(Exp_Type, "ER")) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+ER_ave_2 <- ER_id_2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+SR_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(CS_dur, "10"),
+         str_detect(Trials, "6"),
+         str_detect(Exp_Type, "SR")) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+SR_ave_2 <- SR_id_2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+ER_SR_id_2 <-rbind(ER_id_2, SR_id_2)
+ER_SR_ave_2 <-rbind(ER_ave_2, SR_ave_2)
+```
+
+### E - Graph
+```{r}
+Fig2F <-
+  ggplot(
+  ER_SR_ave_2,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  scale_colour_viridis(discrete = TRUE, begin=0.2, end=0.8) +
+  geom_bar(stat = "identity", alpha=0.5, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=ER_SR_id_2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1 ) +
+  scale_shape(solid = FALSE) +
+  scale_x_discrete(limits= c("ER.100", "SR.100", "ER.050", "SR.050"),
+                  labels= c("2d", "30d", "2d", "30d")) +
+  ylim(0,100) +
+  labs(x = "Day", y = "% Time Freezing") +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig2F
+#ggsave("Fig2F.pdf", plot = Fig2F, width = 1.5, height = 2, units = "in")
+```
+
+### E - Stats
+```{r}
+m2e <- ER_SR_id_2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = "Exp_Type",
+         data = .)
+
+nice_m2e<- nice(m2e)
+
+kable(nice_m2e, caption = '<b>Figure 2E: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Contrast for Contingency
+n2e.1 <- emmeans(m2e, ~ Contingency)
+n2e.1_pairs<- pairs(n2e.1, simple="each")
+
+kable(n2e.1_pairs[1], caption = '<b>Figure 2B-2: Simple contrasts for Contingency</b>') 
+
+#Contrast for Recall test day
+n2e.2 <- emmeans(m2e, ~ Exp_Type)
+n2e.2_pairs<- pairs(n2e.2, simple="each")
+
+kable(n2e.2_pairs[1], caption = '<b>Figure 2B-2: Simple contrasts for TT Day</b>') 
+
+```
+
+## END of Fig 2
+```{r}
+rm(list=(ls())) 
+```
+
+
+# Fig 3. Lower US strength (0.3mA) & partial reinforcement alter fear learning but do not affect fear extinction.  
+
+The previous experiments failed to establish a PREE in fear learning in mice despite varying CS duration and the number of trials. One possible explanation for this was that the US strength used in previous protocols (0.75 mA) may have resulted in a ceiling effect, masking any effects of partial reinforcement on extinction. To avert this, we implemented a weaker US footshock (0.3 mA; Zweifel 2019). To further maximize the possibility to detect PREE we also widened the range of contingencies in our study by introducing a 10% contingency protocol (Fig. 3A, Scheuer 1969). Our experimental design incorporated three groups with varying contingencies: a consistent reinforcement group (a 100% contingency: 3CS:3US pairing) and two partial reinforcement groups: a 50% contingency (6CS:3US pairing) and a 10% contingency (30CS:3US). All statistical analyses and graphing were performed as in Fig. 1-2.
+
+
+## Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+```{r}
+# Create a vector with each filename from all the CSVs in the home directory,
+list.filenames <- list.files("./Fig3", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+
+# These vectors will be used to create 3CS binned averages
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*10.csv$"), 42,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*100.csv$"), 15,
+                                             ifelse(str_detect(list.filenames[[i]], "FC\\w*50.csv$"), 18,
+                                                          ifelse(str_detect(list.filenames[[i]], "ER"), 16,
+                                                                 ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                        24)))))
+  )
+
+#Store the filename as a column since it contains experiment date and type
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 27, -5)
+  
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>%  #collapse separate items in list into one
+  filter(Trial != "NA") %>% #remove empty rows
+  separate(col=Animal, into = c("Strain", "Sex", "Cage", "Animal"), sep = "-") %>% # separate existing columns as indicated below
+  separate(col=Group, into = c("CS_num", "Contingency", "CS_dur", "FE_context"), sep = "-") %>%
+  separate(col=ExpDetails, into = c("Date", "Exp_Type", "Unused"), sep="_") %>% 
+  mutate(
+    id = paste(Strain, Sex, Cage, Animal, sep="_"), #add a column with an animal ID
+    CS= ifelse(str_detect(Exp_Type, "FC") & Contingency == "100", Component.Name,
+         ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 01", "tone 01",
+          ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 03", "tone 02",
+           ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 06", "tone 03", 
+                
+         ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 01", "tone 01",
+            ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 23", "tone 02",
+                ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 25", "tone 03",
+                
+                           ifelse(str_detect(Exp_Type, "FC", negate=TRUE), Component.Name, NA
+                           
+                                           )))))))),
+    
+      Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                   ifelse(Component.Name %in% bin1, "1",
+                         ifelse(Component.Name %in% bin2, "2",
+                                ifelse(Component.Name %in% bin3, "3",
+                                       ifelse(Component.Name %in% bin4, "4", "Post")))))
+  )
+
+df<-as.data.frame(list.data) %>% #Convert list into a dataframe
+  relocate(20:25, .after = 12) %>%  #Move columns containing metadata such that they precede data
+  filter(Trial != "NA")
+#The code below removes animals whose freezing on FC2 was below 15% time freezing, this was done since the focus of the study is on extinction
+ Remove <- df %>% #Create a dataframe  with only the animals whose FC2 freezing was below 15%
+   filter(Exp_Type== "FC2") %>%
+   group_by(id)%>%
+   summarise(mean_FC2_freezing = mean(Pct.Component.Time.Freezing)) %>%
+   filter(mean_FC2_freezing < 15)
+
+ Remove <- unlist(Remove$id) #keep only the list of animals (as a vector)
+
+ `%notin%` <- Negate(`%in%`) #Function for negating the %in% function (source: https://www.r-bloggers.com/2018/07/the-notin-operator/)
+
+ df <- df %>%
+   filter(id %notin% Remove) #filter for animals not in the Remove vector (i.e. filtering for animals freezing more than 15% on FC2)
+
+rm(list=setdiff(ls(), "df")) #remove everything from environment except the df
+
+```
+
+## B. Within-session FC
+Compare the average percent time freezing during CS presentations across the two days of FC training 
+
+### B1 - Dataframe
+```{r}
+#Create a dataframe with averages for each animal for each CS
+FC_id_1.1 <- df %>% 
+  filter(str_detect(Exp_Type, "FC")) %>%
+  group_by(id, Contingency, Sex, Component.Name, Exp_Type, CS) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n())
+
+#Create a dataframe with averages for each experimental group for each CS
+FC_ave_1.1 <- FC_id_1.1 %>% 
+  group_by(Contingency,Component.Name, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### B1 - Graph
+```{r}
+Fig3.B1 <- 
+  ggplot(FC_ave_1.1, aes(x=interaction(Component.Name), y=group_mean_freezing, group=Contingency, color=Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=1) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se, width = 0.4), linewidth=0.3) +
+  ylim(0,100) +
+  scale_x_discrete(limits=c("pre-tone",
+                            "tone 01", "tone 02", "tone 03",  "tone 04", "tone 05", 
+                            "tone 06", "tone 07", "tone 08",  "tone 09", "tone 10",
+                            "tone 11", "tone 12", "tone 13",  "tone 14", "tone 15",
+                            "tone 16", "tone 17", "tone 18",  "tone 19", "tone 20",
+                            "tone 21", "tone 22", "tone 23",  "tone 24", "tone 25",
+                            "tone 26", "tone 27", "tone 28",  "tone 29", "tone 30",
+                            "post-tone"),
+                   labels=c("p",
+                            "1", "2", "3", "4", "5", 
+                            "6", "7", "8", "9", "10", 
+                            "11", "12", "13", "14", "15", 
+                            "16", "17", "18", "19", "20", 
+                            "21", "22", "23", "24", "25", 
+                            "26", "27", "28", "29", "30", 
+                            "p")) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() + 
+  theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text.x = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig3.B1
+
+ # ggsave("Fig3B1.pdf", plot = Fig3.B1, width = 3, height = 2, units = "in")
+```
+
+
+### B1 - Stats
+```{r}
+# Analysis of FC1 Data
+m3b1_FC1 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC1")  %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m3b1_FC1 <-nice(m3b1_FC1)
+kable(nice_m3b1_FC1, caption = '<b>Figure 3.B1: Main FX within-session FC1</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n3b1.1_FC1 <- emmeans(m3b1_FC1, ~ CS)
+n3b1.1_pairs_FC1<- pairs(n3b1.1_FC1, simple="each")
+kable(n3b1.1_pairs_FC1[1], caption = '<b>Figure 3.B1: Simple contrasts for CS</b>') 
+
+#######################
+# Analysis of FC2 Data
+m3b1_FC2 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m3b1_FC2 <-nice(m3b1_FC2)
+kable(nice_m3b1_FC2, caption = '<b>Figure 1.B1: Main FX within-session FC2</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Contrast for CS
+n3b1.1_FC2 <- emmeans(m3b1_FC2, ~ CS * Contingency)
+n3b1.1_pairs_FC2<- pairs(n3b1.1_FC2, simple="each")
+
+kable(n3b1.1_pairs_FC2[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') 
+kable(n3b1.1_pairs_FC2[2], caption = '<b>Figure 1.B1: Simple contrasts for Contingency</b>') 
+
+```
+
+## B2 - Between-session FC
+
+### B2 - Dataframe
+```{r}
+#Create a dataframe with CS freezing averaged for each experimental group 
+FC_id_1.2 <- FC_id_1.1 %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate=TRUE)) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC_ave_1.2 <- FC_id_1.2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### B2 - Graph
+```{r}
+Fig3.B2 <- ggplot(FC_ave_1.2,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=FC_id_1.2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC1.100","FC2.100", "FC1.50", "FC2.50", "FC1.10", "FC2.10"),
+                    labels= c("FC1", "FC2", "FC1", "FC2", "FC1", "FC2")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig3.B2
+  #ggsave("Fig3B2.pdf", plot = Fig3.B2, width = 1, height = 2, units = "in")
+```
+
+### B2 - Stats
+```{r}
+m3b2 <- FC_id_1.2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m3b2  <-nice(m3b2)
+kable(nice_m3b2, caption = '<b>Figure 3.B2: Main FX between-sessions FC</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n3b2 <- emmeans(m3b2, ~ Contingency * Exp_Type)
+n3b2_pairs<- pairs(n3b2, simple="each")
+kable(n3b2_pairs[1], caption = '<b>Figure 3.B2: Simple contrasts for Contingency</b>')
+kable(n3b2_pairs[2], caption = '<b>Figure 3.B2: Simple contrasts for FC Day</b>')
+```
+
+## C. FC Recall ----------------------------------------------------------
+Retrieval was evaluated as the proportion of time freezing between two CS epochs: (1) CS freezing on FC Day 2 and (2) the first four CS presentations on Extinction Day 1.  
+
+### C - Dataframe
+```{r}
+E1_Session1_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E1"),
+         str_detect(Exp_Type, "ER", negate = TRUE),
+         str_detect(Component.Name,  "tone 01|tone 02|tone 03|tone 04")) %>% 
+  group_by(id, Contingency, Exp_Type, Sex) %>%
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+E1_Session1_ave_1 <- E1_Session1_id_1 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC2_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "FC2")) %>% 
+  group_by(id, Contingency, Exp_Type, Sex) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+FC2_ave_1 <- FC2_id_1 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+
+E1_FC2_id_1 <-rbind(E1_Session1_id_1, FC2_id_1)
+
+E1_FC2_ave_1 <-rbind(E1_Session1_ave_1, FC2_ave_1)
+```
+
+### C - Graph
+```{r}
+Fig3C <- ggplot(
+  E1_FC2_ave_1,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=E1_FC2_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC2.100", "E1.100", "FC2.50", "E1.50", "FC2.10", "E1.10"),
+                    labels= c("FC2", "E1\n (CS1-4)", "FC2", "E1\n (CS1-4)", "FC2", "E1\n (CS1-4)")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(
+        legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig3C
+# ggsave("Fig3C.pdf", plot = Fig3C, width = 2, height = 2, units = "in")
+```
+
+### C - Stats
+```{r}
+m3c <- E1_FC2_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = "Exp_Type",
+         data = .)
+
+#ANOVA table
+nice_m3c <-nice(m3c)
+kable(nice_m3c, caption = '<b>Figure 3C: Main FX FC Recall</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left", font_size = 14)
+
+#Post-hoc analyses
+n3c <- emmeans(m3c, ~ Contingency * Exp_Type)
+
+#Contrast for CS x FC Day interaction
+n3c_pairs<- pairs(n3c, simple="each")
+kable(n3c_pairs[1], caption = '<b>Figure 3.C: Simple contrasts for Contingency</b>')
+kable(n3c_pairs[2], caption = '<b>Figure 3.C: Simple contrasts for CS Epoch</b>')
+```
+
+## D. Extinction acquisition-----------------------------------------------
+
+### D1 - Within-session FE
+To evaluate the effect of partial reinforcement on fear extinction acquisition, mice were exposed to 12 unreinforced CS presentations for three consecutive days (E1, E2, E3) in a novel context (Context B). Percent time freezing was averaged in bins composed of 3CS presentations. 
+
+### D1 - Dataframe
+```{r}
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E"),
+         str_detect(Experiment, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, Contingency, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Exp_Type, Bin, Contingency) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+```
+
+### D1 - Graph
+```{r}
+Fig3D.1 <-
+  ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=interaction(Bin),
+      y=group_mean_freezing,
+      group = Contingency, color= Contingency, fill=Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  scale_shape(solid = FALSE) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  scale_x_discrete(limits=c("Pre", "1", "2", "3", "4", "Post"),
+                   labels=c("p", "1", "2", "3", "4", "p")) +
+  ylim(0,100) +
+  labs(x = "Bin", y = "% Time Freezing") +
+  theme_bw() +
+   theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+  
+Fig3D.1
+
+#ggsave("Fig3D1.pdf", plot = Fig3D.1, width = 2.5, height = 2, units = "in")
+```
+
+### D1 - Stats
+```{r}
+#FE1 - Mean freezing analysis
+
+m3.d1.FE1 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Bin"),
+         data = .)
+
+##ANOVA table
+nice_m3.d1.FE1 <-nice(m3.d1.FE1)
+kable(nice_m3.d1.FE1, caption = '<b>Figure 3.D1: Main FX within session E1</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+##Post-hoc analyses
+n3.d1.FE1 <- emmeans(m3.d1.FE1, ~ Bin)
+n3.d1.FE1_pairs<- pairs(n3.d1.FE1, simple="each")
+
+##Simple contrasts for Bin
+kable(n3.d1.FE1_pairs[1], caption = '<b>Figure 1.D1 Simple Contrasts by CS bin for E1</b>')
+
+###### FE2 ############
+m3.d1.FE2 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Bin"),
+         data = .)
+
+#ANOVA table
+nice_m3.d1.FE2 <-nice(m3.d1.FE2)
+kable(nice_m3.d1.FE2, caption = '<b>Figure 1.D1: Main FX within session E2</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Post-hoc model #1
+n3.d1.FE2 <- emmeans(m3.d1.FE2, ~ Contingency * Bin)
+n3.d1.FE2_pairs<- pairs(n3.d1.FE2, simple="each")
+
+# Simple contrasts for Contingency (no sig effects)
+ kable(n3.d1.FE2_pairs[1], caption = '<b>Figure 1.D1-E2: Simple Contrasts by Contingency</b>')
+
+kable(n3.d1.FE2_pairs[2], caption = '<b>Figure 1.D1-E2: Simple Contrasts by CS bin</b>')
+
+
+###### FE3 ############
+m3.d1.FE3 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Bin"),
+         data = .)
+
+#ANOVA table
+nice_m3.d1.FE3 <-nice(m3.d1.FE3)
+kable(nice_m3.d1.FE3, caption = '<b>Figure 1.D1: Main FX within session E3</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Post-hoc model #1
+n3.d1.FE3 <- emmeans(m3.d1.FE3, ~ Bin)
+n3.d1.FE3_pairs<- pairs(n3.d1.FE3, simple="each")
+
+#Simple contrasts for Bin
+kable(n3.d1.FE3_pairs[1], caption = '<b>Figure 1.D1-E3: Simple Contrasts by CS bin</b>')
+```
+
+#### FE Linear contrasts (i.e. contrast for slopes)
+
+```{r}
+#Weights for FE-CS
+FE_dm = mean(c(1:12)) - c(1:12) #Demeaned CSs
+FE_dm_ss = sum((FE_dm)^2) #Sum of squares of demeaned CSs
+weightsFE = FE_dm/FE_dm_ss #Standardized CS scores
+weightsFE
+
+# Creating dataframe for slope analysis
+EXT_weighted_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE))
+  
+EXT_weighted_id_2$weights <- weightsFE
+
+EXT_weighted_id_2 <- EXT_weighted_id_2 %>% 
+  mutate(weighted_FE = weights * Pct.Component.Time.Freezing)
+
+Ext_slope.2 <- EXT_weighted_id_2 %>% 
+  group_by(id, Contingency, CS_dur, Exp_Type) %>% 
+  summarise(slope= sum(weighted_FE))
+
+### E1
+m3.slope.FE1 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m3.slope.FE1 <-nice(m3.slope.FE1)
+kable(nice_m3.slope.FE1, caption = '<b>Figure 3.Slope-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+### E2
+m3.slope.FE2 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E2") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m3.slope.FE2 <-nice(m3.slope.FE2)
+kable(nice_m3.slope.FE2, caption = '<b>Figure 3.Slope-E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Post-hoc model #1
+n3s.d1.FE2 <- emmeans(m3.slope.FE2, ~ Contingency)
+n3s.d1.FE2
+n3s.d1.FE2_pairs<- pairs(n3s.d1.FE2, simple="each")
+
+# Simple contrasts for Contingency (no sig effects)
+ kable(n3s.d1.FE2_pairs[1], caption = '<b>Figure 3.D1-E2: Simple Contrasts by Contingency</b>')
+
+### E3
+m3.slope.FE3 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E3") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m3.slope.FE3 <-nice(m3.slope.FE3)
+kable(nice_m3.slope.FE3, caption = '<b>Figure 3.Slope-E3: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## D2. Between-session Extinction ---------------------------------------------
+
+### D2 - Dataframe
+```{r}
+EXT_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, Contingency) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_ave_1 <- EXT_id_1 %>% 
+  group_by(Exp_Type, Contingency) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### D2 - Graph
+```{r}
+Fig3.D2 <-
+  ggplot(
+  EXT_ave_1,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  geom_bar(stat = "identity", alpha=0.25, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=EXT_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1) +
+    scale_shape(solid = FALSE) +
+  scale_x_discrete(limits=c("E1.100", "E2.100", "E3.100",
+                            "E1.50", "E2.50", "E3.50",
+                            "E1.10", "E2.10", "E3.10"),
+                   labels=c("E1", "E2", "E3", "E1", "E2", "E3", "E1", "E2", "E3")) +
+  ylim(0,100) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+        legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        panel.border= element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig3.D2
+
+ #ggsave("Fig3.D2.pdf", plot = Fig3.D2, width = 2, height = 2, units = "in")
+```
+
+### D2 - Stats
+```{r}
+m3.d2.FE <- EXT_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m3.d2.FE <-nice(m3.d2.FE)
+kable(nice_m3.d2.FE, caption = '<b>Figure 1.D2: Between-session FE, Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n3.d2 <- emmeans(m3.d2.FE, ~ Exp_Type)
+
+#Simple contrasts for Extinction Day
+n3.d2_pairs <- pairs(n3.d2, simple="each")
+kable(n3.d2_pairs[1], caption = '<b>Figure 1.D2-E1:Simple Contrasts by FE Day</b>')
+```
+
+## E. Extinction Recall -------------------------------------------------------------
+Extinction recall was measured at recent (48 h) or remote (30 d) timepoints. Mice were returned to Context B and received a tone test (4 CS presentations) 48 hours and 30 days after the last day of extinction training. In addition to comparing experimental groups at each time point, we also compared percent time freezing within-subjects between the recent and remote time points to assess the level of spontaneous recovery, or the return of conditioned fear with the passage of time  
+
+### E - Dataframe
+```{r}
+ER_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "ER")) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+ER_ave_1 <- ER_id_1 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+SR_id_1 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "SR")) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+SR_ave_1 <- SR_id_1 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+ER_SR_id_1 <-rbind(ER_id_1, SR_id_1)
+ER_SR_ave_1 <-rbind(ER_ave_1, SR_ave_1)
+```
+
+### E - Graph
+```{r}
+Fig3E <-
+  ggplot(
+  ER_SR_ave_1,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency,
+      color = Contingency,
+      fill = Contingency)) +
+  scale_color_manual(values = c("10" = "#FF5743",
+                                "50" = "#453781FF",
+                                "100" = "#73D055FF")) +
+  geom_bar(stat = "identity", alpha=0.5, width = 0.8) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_point(
+    data=ER_SR_id_1,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),
+    position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
+                                    dodge.width = 0.8),
+    size=1 ) +
+  scale_shape(solid = FALSE) +
+  scale_x_discrete(limits= c("ER.100", "SR.100",
+                             "ER.50", "SR.50",
+                              "ER.10", "SR.10"),
+                  labels= c("2d", "30d", "2d", "30d", "2d", "30d")) +
+  ylim(0,100) +
+  labs(x = "Day", y = "% Time Freezing") +
+  theme_bw() +
+  theme(
+        legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) + 
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig3E
+#ggsave("Fig3E.pdf", plot = Fig3E, width = 2, height = 2, units = "in")
+```
+
+### E - Stats
+```{r}
+m2e <- ER_SR_id_1 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = "Contingency",
+         within = "Exp_Type",
+         data = .)
+
+nice_m2e<- nice(m2e)
+
+kable(nice_m2e, caption = '<b>Figure 2E: FE recall Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+#Contrast for Contingency
+n2e.1 <- emmeans(m2e, ~ Contingency)
+n2e.1_pairs<- pairs(n2e.1, simple="each")
+
+kable(n2e.1_pairs[1], caption = '<b>Figure 2B-2: Simple contrasts for Contingency</b>') 
+
+#Contrast for Recall test day
+n2e.2 <- emmeans(m2e, ~ Exp_Type)
+n2e.2_pairs<- pairs(n2e.2, simple="each")
+
+kable(n2e.2_pairs[1], caption = '<b>Figure 2B-2: Simple contrasts for Tone-test day</b>') 
+
+```
+
+## END Fig 3
+```{r}
+rm(list=(ls())) 
+```
+
+
+# Fig 4 B-C: Reducing the number of Fear Conditioning Sessions to 1
+Previous studies have found that the over-training may occlude the PREE (Hilton 1969; Sutherland et al. 1965). To address the possibility that this was occuring in our experiments, we reduced the cued-fear conditioning protocol from two days to one (see Fig. 4A). As in Fig. 1-2, mice were conditioned using 3 (100%) or 6 (50%) CS which were paired with 3 US (0.75 mA). All statistical analyses and graphing were performed as in Fig. 1-2.  
+
+## Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+```{r}
+# df ---------------------------------------------------
+
+# Create a vector with each filename from all the CSVs in the home directory,
+list.filenames <- list.files("./Fig4_BC", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+
+# These vectors will be used to create 3CS binned averages
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*100.csv$"), 15,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*50.csv$"), 18,
+                                                    ifelse(str_detect(list.filenames[[i]], "E1"), 24,
+                                                           ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                  24))))
+  )
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 30, -5)
+
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>%  #collapse separate items in list into one
+  filter(Trial != "NA") %>% #remove empty rows
+  separate(col=Animal, into = c("Strain", "Sex", "Cage", "Animal"), sep = "-") %>% # separate existing columns as indicated below
+  separate(col=Group, into = c("CS_num", "Contingency", "CS_dur", "FE_context"), sep = "-") %>%
+  separate(col=ExpDetails, into = c("Date", "Exp_Type", "Unused"), sep="_") %>% 
+  mutate(
+    id = paste(Strain, Sex, Cage, Animal, sep="_"), #add a column with an animal ID
+    CS= ifelse(str_detect(Exp_Type, "FC") & Contingency == "100", Component.Name,
+         ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 01", "tone 01",
+          ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 03", "tone 02",
+           ifelse(str_detect(Exp_Type, "FC") & Contingency == "50" & Component.Name == "tone 06", "tone 03", 
+                
+         ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 01", "tone 01",
+            ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 23", "tone 02",
+                ifelse(str_detect(Exp_Type, "FC") & Contingency == "10" & Component.Name == "tone 25", "tone 03",
+                
+                           ifelse(str_detect(Exp_Type, "FC", negate=TRUE), Component.Name, NA
+                           
+                                           )))))))),
+    
+      Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                   ifelse(Component.Name %in% bin1, "1",
+                         ifelse(Component.Name %in% bin2, "2",
+                                ifelse(Component.Name %in% bin3, "3",
+                                       ifelse(Component.Name %in% bin4, "4", "Post")))))
+  )
+
+# Conver list into a dataframe
+df<-as.data.frame(list.data)
+
+df<-as.data.frame(list.data) %>% #Convert list into a dataframe
+  relocate(20:25, .after = 12) #Move columns containing metadata such that they precede data
+
+#The code below removes animals whose freezing on FC2 was below 15% time freezing, this was done since the focus of the study is on extinction 
+Remove <- df %>% #Create a dataframe  with only the animals whose FC2 freezing was below 15%
+  filter(Exp_Type== "FC2") %>% 
+  group_by(id)%>% 
+  summarise(mean_FC2_freezing = mean(Pct.Component.Time.Freezing)) %>% 
+  filter(mean_FC2_freezing < 15) 
+
+Remove <- unlist(Remove$id) #keep only the list of animals (as a vector)
+
+`%notin%` <- Negate(`%in%`) #Function for negating the %in% function (source: https://www.r-bloggers.com/2018/07/the-notin-operator/)
+
+df <- df %>% 
+  filter(id %notin% Remove) #filter for animals not in the Remove vector (i.e. filtering for animals freezing more than 15% on FC2)
+
+rm(list=setdiff(ls(), "df")) #remove everything from environment except the df
+df<- df %>% 
+  drop_na(Trial, Strain, Experiment)  
+```
+
+
+
+## B1. Within-sessopm FC
+### B1 - Dataframe
+```{r}
+#Create a dataframe with averages for each animal for each CS
+FC_id_1.1 <- df %>% 
+  filter(str_detect(Exp_Type, "FC")) %>%
+  group_by(id, Contingency, Sex, Component.Name, Exp_Type, CS) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n())
+
+#Create a dataframe with averages for each experimental group for each CS
+FC_ave_1.1 <- FC_id_1.1 %>% 
+  group_by(Contingency,Component.Name, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+### B1 - Graph
+```{r}
+Fig4.B1 <- 
+  ggplot(FC_ave_1.1, aes(x=interaction(Component.Name), y=group_mean_freezing, group=Contingency, color=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  scale_colour_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se, width = 0.4), linewidth=0.3) +
+  ylim(0,100) +
+  scale_x_discrete(limits=c("pre-tone",
+                            "tone 01", "tone 02", "tone 03",  "tone 04", "tone 05", 
+                            "tone 06", 
+                            "post-tone"),
+                   labels=c("p",
+                            "1", "2", "3", "4", "5", 
+                            "6", 
+                            "p")) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() + 
+  theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text.x = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig4.B1
+
+ #ggsave("Fig4B1.pdf", plot = Fig4.B1, width = 1.25, height = 2, units = "in")
+```
+
+
+### B1 - Stats
+Sex was originally in the statistical model: mean_freezing ~ Contingency (2) X CS_time (2) X Sex (2). However, considering broad lack of sex-specific effects, it was dropped from models.
+```{r}
+# Analysis of FC1 Data
+m4b1_FC1 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC1")  %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m4b1_FC1 <-nice(m4b1_FC1)
+kable(nice_m4b1_FC1, caption = '<b>Figure 4.B1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n4b1.1_FC1 <- emmeans(m4b1_FC1, ~ Contingency * CS)
+n4b1.1_pairs_FC1<- pairs(n4b1.1_FC1, simple="each")
+kable(n4b1.1_pairs_FC1[1], caption = '<b>Figure 4.B1: Simple contrasts for Contingency</b>') 
+kable(n4b1.1_pairs_FC1[2], caption = '<b>Figure 4.B1: Simple contrasts for CS</b>') 
+
+```
+
+## B2 - Between-session FC
+
+### B2 - Dataframe
+```{r}
+#Create a dataframe with CS freezing averaged for each experimental group 
+FC_id_1.2 <- FC_id_1.1 %>% 
+  filter(str_detect(Component.Name, "tone 01|pre-tone|post-tone", negate=TRUE)) %>% 
+  group_by(id, Sex, Contingency, Exp_Type) %>% 
+  summarize(mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC_ave_1.2 <- FC_id_1.2 %>% 
+  group_by(Contingency, Exp_Type) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+```
+
+### B2 - Graph
+```{r}
+Fig4.B2 <- ggplot(FC_ave_1.2,
+  aes(x=interaction(Exp_Type,Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  scale_colour_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=FC_id_1.2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   scale_x_discrete(limits=c("FC1.100","FC1.50"),
+                    labels= c("FC1", "FC1")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig4.B2
+  #ggsave("Fig4B2.pdf", plot = Fig4.B2, width = 1, height = 2, units = "in")
+```
+
+### B2 - Stats
+```{r}
+m4b2 <- FC_id_1.2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m4b2  <-nice(m4b2)
+kable(nice_m4b2, caption = '<b>Figure 4.B2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+
+## C. Extinction acquisition-----------------------------------------------
+
+### C - Within-session FE
+To evaluate the effect of partial reinforcement on fear extinction acquisition, mice were exposed to 12 unreinforced CS presentations for three consecutive days (E1, E2, E3) in a novel context (Context B). Percent time freezing was averaged in bins composed of 3CS presentations. 
+
+### C - Dataframe
+```{r}
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E"),
+         str_detect(Experiment, "ER", negate = TRUE)) %>% 
+  group_by(Exp_Type, id, Sex, Contingency, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Exp_Type, Bin, Contingency) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+```
+
+### C - Graph
+```{r}
+Fig4D.1 <-
+  ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=interaction(Bin),
+      y=group_mean_freezing,
+      group = Contingency, color= Contingency, fill=Contingency)) +
+  scale_fill_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  scale_colour_viridis(discrete = TRUE, begin=0.8, end=0.2) +
+  facet_wrap(~Exp_Type) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  scale_shape(solid = FALSE) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  scale_x_discrete(limits=c("Pre", "1", "2", "3", "4", "Post"),
+                   labels=c("p", "1", "2", "3", "4", "p")) +
+  ylim(0,100) +
+  labs(x = "Bin", y = "% Time Freezing") +
+  theme_bw() +
+   theme(
+        # legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+  
+Fig4D.1
+
+#ggsave("Fig4D1.pdf", plot = Fig4D.1, width = 1.25, height = 2, units = "in")
+```
+
+### C - Stats
+```{r}
+#FE1 - Mean freezing analysis
+
+m4.d1.FE1 <- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency"),
+         within = c("Bin"),
+         data = .)
+
+##ANOVA table
+nice_m4.d1.FE1 <-nice(m4.d1.FE1)
+kable(nice_m4.d1.FE1, caption = '<b>Figure 4.D1-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+##Post-hoc analyses
+n4.d1.FE1 <- emmeans(m4.d1.FE1, ~ Bin)
+n4.d1.FE1_pairs<- pairs(n4.d1.FE1, simple="each")
+
+##Simple contrasts for Bin
+kable(n4.d1.FE1_pairs[1], caption = '<b>Figure 4.D1-E1: Simple Contrasts by CS bin</b>')
+```
+
+#### FE Linear contrasts (i.e. contrast for slopes)
+We expressed the contrast in units that represent the slope of the best-fitting line in the relationship between the dependent (freezing) and independent variables. Note to linear regression users: this slope is identical to the one we would find using linear regression. A linear regression model is nothing more than a linear contrast.
+
+To find contrast weights that will yield the slope, we first weighted the freezing values by a standardized CS# . To standardize the CS, we demean them to get them to sum to zero (i.e. we subtracted the mean from each CS value [1-12]). Next we divided each demeaned CS# by the sum of squares of all the demeaned CSs. Finally, to create weighted freezing values we multiplied %freezing per CS by Animal by the standardize CS. This creates a linear contrast for each animal (note this is the same than creating a linear regression per animal) and the sum of the weighted CS-freezing values gives us the slope. 
+
+```{r}
+#Weights for FE-CS
+FE_dm = mean(c(1:12)) - c(1:12) #Demeaned CSs
+FE_dm_ss = sum((FE_dm)^2) #Sum of squares of demeaned CSs
+weightsFE = FE_dm/FE_dm_ss #Standardized CS scores
+weightsFE
+
+# Creating dataframe for slope analysis
+EXT_weighted_id_2 <- df %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
+         str_detect(Exp_Type, "E"),
+         str_detect(Exp_Type, "ER", negate = TRUE))
+  
+EXT_weighted_id_2$weights <- weightsFE
+
+EXT_weighted_id_2 <- EXT_weighted_id_2 %>% 
+  mutate(weighted_FE = weights * Pct.Component.Time.Freezing)
+
+Ext_slope.2 <- EXT_weighted_id_2 %>% 
+  group_by(id, Contingency, CS_dur, Exp_Type) %>% 
+  summarise(slope= sum(weighted_FE))
+
+### E1
+m4.slope.FE1 <- Ext_slope.2 %>%
+   filter(Exp_Type == "E1") %>% 
+  aov_ez(id = "id",
+         dv = "slope",
+         between = c("Contingency"),
+         data = .)
+
+##ANOVA table
+nice_m4.slope.FE1 <-nice(m4.slope.FE1)
+kable(nice_m4.slope.FE1, caption = '<b>Figure 4.Slope-E1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+```
+
+## END Fig 4 B-C
+```{r}
+
+rm(list=(ls())) 
+
+```
+
+# Fig 4 E-F. Testing effect of interpolated extinction on FE 
+
+Finally, we attempted to stimulate a PREE using an interpolated extinction (IPE) session (Fig. 4D). We based this approach on a previous study which inflated the PREE by interpolating a block of non-reinforced trials (20 CS) in the conditioning phase with the rationale of enhancing the effect of nonreinforcement (Hilton 1969). As shown in Fig. 4D, mice were exposed to the interpolated CS session (+IPE) on day two of the paradigm,  in between FC training days (Day 1 and Day 3); mice in the control group (-IPE) were placed in the chamber for an equal amount of time but were not exposed to CS. 
+
+## Load and tidy data
+
+Data was exported from VideoFreeze as CSV files. The header rows of the raw CSV files contain information regarding how the data was exported (ie how data was segmented into bins as well as what motion index threshold was used as a cut-off for assessing freezing). 
+
+```{r}
+list.filenames <- list.files("./Fig4_EF", pattern = ".csv$", 
+                             full.names=TRUE, recursive = TRUE)
+
+# These vectors will be used to create 3CS binned averages
+bin1 =c("tone 01", "tone 02", "tone 03")
+bin2 =c("tone 04", "tone 05", "tone 06")
+bin3 =c("tone 07", "tone 08", "tone 09")
+bin4 =c("tone 10", "tone 11", "tone 12")
+
+# delete the metadata from the list.filenames
+list.data <- list()
+
+for (i in 1:length(list.filenames)) {
+  list.data[[i]] <- read.csv(list.filenames[[i]], skip=
+                               ifelse(str_detect(list.filenames[[i]], "FC\\w*CR.csv$"), 15,
+                                      ifelse(str_detect(list.filenames[[i]], "FC\\w*PR.csv$"), 18,
+                                             ifelse(str_detect(list.filenames[[i]], "IPE"), 32,
+                                                    ifelse(str_detect(list.filenames[[i]], "E1"), 24,
+                                                           ifelse(str_detect(list.filenames[[i]], "SR"), 16,
+                                                                  24)))))
+  )
+  list.data[[i]]$ExpDetails <- str_sub(list.filenames[[i]], 30, -5)
+
+}
+
+list.data <- list.data %>% 
+  reduce(full_join) %>% #collapse separate items in list into one
+  separate(col=ExpDetails, into = c("Exp_Date", "Exp_Type", "Exp_Room", "Exp_Sched"), sep = "_") %>% 
+  separate(col=Group, into = c("Contingency", "IPE"), sep = "_") %>%
+  separate(col = Animal, into = c("Strain", "Sex", "Cage", "Animal"), sep = "-") %>% 
+   mutate(
+    id = paste(Strain, Sex, Cage, Animal, sep="_"), #add a column with an animal ID
+    CS= ifelse(str_detect(Exp_Type, "FC") & Contingency == "CR", Component.Name,
+         ifelse(str_detect(Exp_Type, "FC") & Contingency == "PR" & Component.Name == "tone 01", "tone 01",
+          ifelse(str_detect(Exp_Type, "FC") & Contingency == "PR" & Component.Name == "tone 03", "tone 02",
+           ifelse(str_detect(Exp_Type, "FC") & Contingency == "PR" & Component.Name == "tone 06", "tone 03", 
+                
+                           ifelse(str_detect(Exp_Type, "FC", negate=TRUE), Component.Name, NA
+                           
+                                           ))))),
+    Bin = ifelse(Component.Name %in% "pre-tone", "Pre",
+                   ifelse(Component.Name %in% bin1, "1",
+                         ifelse(Component.Name %in% bin2, "2",
+                                ifelse(Component.Name %in% bin3, "3",
+                                       ifelse(Component.Name %in% bin4, "4", "Post")))))
+  )
+
+# Conver list into a dataframe
+df<-as.data.frame(list.data) %>% #Convert list into a dataframe
+  relocate(18:24, .after = 10) %>%  #Move columns containing metadata such that they precede data
+  drop_na(Trial, Strain, Experiment) 
+
+rm(list=setdiff(ls(), "df"))
+# df<- df %>% 
+#   drop_na(Trial, Strain, Experiment)  
+
+#write_csv(df, "220803_PREE_df.csv")
+```
+
+## E1 - Within-session FC
+### E1 - Dataframe
+```{r}
+FC_id_1.1 <- df %>% 
+  filter(str_detect(Exp_Type, "FC")) %>% 
+  group_by(id, Sex, Contingency, IPE, Exp_Type, Component.Name, CS) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n())
+
+#write_csv(FC_id, "220803_PREE_FC_id.csv")
+
+FC_ave_1.1 <- FC_id_1.1 %>% 
+  group_by(Contingency, IPE, Exp_Type, Component.Name) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+#write_csv(FC_ave, "220803_PREE_FC_ave.csv")
+
+```
+
+### E1 - Graph
+```{r}
+Fig4E1 <- 
+  ggplot(FC_ave_1.1, aes(x=interaction(Component.Name), y=group_mean_freezing, group=interaction(Contingency, IPE), color=interaction(Contingency), linetype= IPE)) +
+  scale_color_viridis_d(begin=0.8, end=0.2) +
+  scale_fill_viridis_d(begin=0.8, end=0.2) +
+  facet_wrap(~IPE*Exp_Type) +
+  geom_line() +
+  geom_point(size=1) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se, width = 0.4), linewidth=0.3, linetype=1) +
+  ylim(0,100) +
+  scale_x_discrete(limits=c("pre-tone", "tone 01", "tone 02", "tone 03",  "tone 04", "tone 05",
+                            "tone 06",
+                            "post-tone"),
+                   labels=c("p", "1", "2", "3", "4", "5",
+                            "6",
+                            "p")) +
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing") +
+  theme_bw() + 
+  theme(
+        legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+
+Fig4E1
+
+ #ggsave("FigE1.pdf", plot = Fig4E2, width = 2, height = 2, units = "in")
+```
+
+### E1 - Stats
+```{r}
+# Analysis of FC1 Data
+m4E1_FC1 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC1")  %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "IPE"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m4E1_FC1 <-nice(m4E1_FC1)
+kable(nice_m4E1_FC1, caption = '<b>Figure 4.E1: FC1 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n4E1.1_FC1 <- emmeans(m4E1_FC1, ~ Contingency * CS)
+n4E1.1_FC1_pairs<- pairs(n4E1.1_FC1, simple="each")
+kable(n4E1.1_FC1_pairs[1], caption = '<b>Figure 4.E1: Simple contrasts for Contingency</b>') 
+kable(n4E1.1_FC1_pairs[2], caption = '<b>Figure 4.E1: Simple contrasts for CS</b>') 
+
+# Analysis of FC2 Data
+m4E1_FC2 <- FC_id_1.1  %>%
+   filter(str_detect(CS, "tone 01|tone 02|tone 03") &
+          Exp_Type == "FC2")  %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "IPE"),
+         within = c("CS"),
+         data = .)
+
+#ANOVA table
+nice_m4E1_FC2 <-nice(m4E1_FC2)
+kable(nice_m4E1_FC2, caption = '<b>Figure 4.E1: FC2 Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+```
+
+## E2 - Between-session FC
+### E2 - Dataframe
+```{r}
+#Create a dataframe with CS freezing averaged for each experimental group 
+FC_id_1.2 <- FC_id_1.1 %>% 
+  filter(str_detect(Component.Name, "pre-tone|post-tone", negate=TRUE)) %>% 
+  group_by(id, Sex, Contingency, Exp_Type, IPE) %>% 
+  summarize(mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+FC_ave_1.2 <- FC_id_1.2 %>% 
+  group_by(Contingency, Exp_Type, IPE) %>% 
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+```
+
+### E2 - Graph
+Plot data by group, averaging all CS
+```{r}
+Fig4.E2 <- ggplot(FC_ave_1.2,
+  aes(x=interaction(Exp_Type, Contingency),
+      y=group_mean_freezing,
+      group = Contingency, fill= Contingency, color=Contingency)) +
+  scale_color_viridis_d(begin=0.8, end=0.2) +
+  scale_fill_viridis_d(begin=0.8, end=0.2) +
+   facet_wrap(~IPE, ncol=1) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4) +
+  geom_bar(stat="identity", alpha=0.25) +
+  geom_point(
+    data=FC_id_1.2,
+    aes(x=interaction(Exp_Type, Contingency), y=mean_freezing, shape=Sex),position = position_jitterdodge(jitter.height=0, jitter.width=0.25, dodge.width = 0.8), size=1) +
+  scale_shape(solid = FALSE) +
+   # scale_x_discrete(limits=c("FC1.100","FC2.100", "FC1.050", "FC2.050"),
+   #                  labels= c("FC1", "FC2", "FC1", "FC2")) +
+  ylim(0,100) +
+  theme_bw() +
+  theme(legend.position = "none",
+        # strip.background = element_blank(),
+        # strip.text = element_blank(),
+        plot.background = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8, color="black"),
+        axis.text.y = element_text(size = 8, color="black"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1))+
+  labs(
+    x = "CS Time",
+    y = "% Time Freezing")
+
+Fig4.E2
+# ggsave("Fig4E2.pdf", plot = Fig4.E2, width = 1, height = 2, units = "in")
+```
+
+### E2 - Stats
+```{r}
+m4e2 <- FC_id_1.2 %>%
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "IPE"),
+         within = c("Exp_Type"),
+         data = .)
+
+#ANOVA table
+nice_m4e2  <-nice(m4e2)
+kable(nice_m4e2, caption = '<b>Figure 4.E2: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+#Post-hoc analyses
+n4e2 <- emmeans(m4e2, ~ IPE * Exp_Type)
+n4e2_pairs<- pairs(n4e2, simple="each")
+kable(n4e2_pairs[1], caption = '<b>Figure 4.E2: Simple contrasts for IPE</b>') 
+kable(n4e2_pairs[2], caption = '<b>Figure 4.E2: Simple contrasts for FC Session</b>') 
+```
+
+## F. Within-Session Extinction
+### F - Dataframe
+To evaluate the effect of partial reinforcement on fear extinction acquisition, mice were exposed to 12 unreinforced CS presentations for three consecutive days (E1, E2, E3) in a novel context (Context B). Percent time freezing was averaged in bins composed of 3CS presentations. 
+```{r}
+EXT_bin_id_1 <- df %>% 
+  filter(str_detect(Exp_Type, "E"),
+         str_detect(Experiment, "ER|IPE", negate = TRUE)) %>% 
+  group_by(id, Sex, IPE, Contingency, Bin) %>% 
+  summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
+            se=sd(Pct.Component.Time.Freezing/sqrt(n())))
+
+EXT_bin_ave_1 <- EXT_bin_id_1 %>% 
+  group_by(Bin, IPE, Contingency) %>%
+  summarize(group_mean_freezing=mean(mean_freezing), n=n(),
+            se=sd(mean_freezing/sqrt(n())))
+
+EXT_bin_ave_1$Bin <- factor(EXT_bin_ave_1$Bin, levels = c("Pre", "1", "2", "3", "4", "Post"))
+  
+```
+
+### F - Graph
+```{r}
+Fig4.F <-
+  ggplot(
+  data = subset(EXT_bin_ave_1, !is.na(Bin)),
+  aes(x=interaction(Bin),
+      y=group_mean_freezing,
+      group = interaction(Contingency, IPE), color= Contingency, fill=Contingency, linetype=IPE)) +
+  scale_color_viridis_d(begin=0.2, end=0.8) +
+  scale_fill_viridis_d(begin=0.2, end=0.8) +
+  # facet_wrap(~IPE) +
+  geom_line() +
+  geom_point(shape=18, size=2) +
+  scale_shape(solid = FALSE) +
+  geom_errorbar(aes(ymin = group_mean_freezing-se, ymax = group_mean_freezing+se), width=0.4, linetype=1) +
+  scale_x_discrete(limits=c("Pre", "1", "2", "3", "4", "Post"),
+                   labels=c("p", "1", "2", "3", "4", "p")) +
+  ylim(0,100) +
+  labs(x = "Bin", y = "% Time Freezing") +
+  theme_bw() +
+    theme(
+        legend.position = "none",
+        strip.background = element_blank(),
+        strip.text = element_blank(),
+        plot.background = element_blank(),
+        plot.title = element_text(size = 18,face="bold.italic", hjust=0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 12, color="black"),
+        axis.text.y = element_text(size = 12, color="black"),
+        axis.title.x = element_text(size = 0, face= "bold"),
+        axis.title.y = element_text(size = 0, face="bold"),
+        axis.line.x = element_line(color="black", linewidth = 1),
+        axis.line.y = element_line(color="black", linewidth = 1)) 
+  
+Fig4.F
+ #ggsave("Fig4.F.pdf", plot = Fig4.F, width = 1.25, height = 2, units = "in")
+```
+
+### F - Stats
+```{r}
+#FE1 - Mean freezing analysis
+m4F1<- EXT_bin_id_1 %>%
+  filter(str_detect(Bin, "Pre|Post", negate = TRUE)) %>% 
+  aov_ez(id = "id",
+         dv = "mean_freezing",
+         between = c("Contingency", "IPE"),
+         within = c("Bin"),
+         data = .)
+
+##ANOVA table
+nice_m4F1 <-nice(m4F1)
+kable(nice_m4F1, caption = '<b>Figure 4.F1: Main FX</b>') %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+##Post-hoc analyses
+n4e1 <- emmeans(m4F1, ~ Bin)
+n4e1_pairs<- pairs(n4e1, simple="each")
+
+##Simple contrasts for Bin
+kable(n4e1_pairs[], caption = '<b>Figure 4.D1-E1: Simple Contrasts by CS bin</b>')
+```
+
+## END
