@@ -99,14 +99,14 @@ FC_id_1 <- df %>%
   filter(str_detect(Component.Name, "pre-tone|post-tone", negate = TRUE),
          str_detect(Exp_Type, "FC"),
          str_detect(Trials, "3 Trials")) %>% 
-  group_by(id, Group, CS_Time, Contingency) %>% 
+  group_by(id, Group, CS_Time, Contingency, Exp_Type, Component.Name, Sex) %>% 
   summarize(mean_freezing=mean(Pct.Component.Time.Freezing), n=n(),
             se=sd(Pct.Component.Time.Freezing/sqrt(n())))
 
 #write_csv(FC_id, "220803_PREE_FC_id.csv")
 
 FC_ave_1 <- FC_id_1 %>% 
-  group_by(CS_Time, Group, Contingency) %>% 
+  group_by(CS_Time, Group, Contingency, Exp_Type, Component.Name) %>% 
   summarize(group_mean_freezing=mean(mean_freezing), n=n(),
             se=sd(mean_freezing/sqrt(n())))
 
@@ -116,14 +116,14 @@ FC_ave_1 <- FC_id_1 %>%
 ### B - Graph
 ```{r}
 ggplot(FC_ave_1,
-       aes(x=CS_Time,
+       aes(x=Component.Name,
            y=group_mean_freezing, 
            group=Contingency,
            color=Contingency,
-           fill=Contingency,
-           shape=Group)) +
-  scale_fill_viridis(discrete = TRUE) +
-  scale_colour_viridis(discrete = TRUE) +
+           fill=Contingency)) +
+  facet_wrap(~CS_Time*Exp_Type) +
+  scale_fill_viridis(discrete = TRUE, begin = 0.2, end = 0.8) +
+  scale_colour_viridis(discrete = TRUE, begin = 0.2, end = 0.8) +
   geom_bar(
     stat = "identity",
     position = "dodge",
@@ -139,7 +139,7 @@ ggplot(FC_ave_1,
   ) +
   geom_point(
     data=FC_id_1,
-    aes(x=CS_Time, y=mean_freezing), 
+    aes(x=Component.Name, y=mean_freezing), 
     position = position_jitterdodge(jitter.height=0, jitter.width=0.25,
                                     dodge.width = 0.8),
     size=3
