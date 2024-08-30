@@ -8,7 +8,7 @@ There are two versions of the data and data analysis code:
 https://doi.org/10.31234/osf.io/8udn5
 
 * The files associated with this version are:
-          + R notebook: Su-etal-2024.Rmd
+          * R notebook: Su-etal-2024.Rmd
           + html: Su-etal-2024.html
           + Data files: 
                     + Figure_1_2_PREE
