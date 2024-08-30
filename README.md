@@ -7,12 +7,12 @@ There are two versions of the data and data analysis code:
 (v1) From our original submission to a preprint server:
 https://doi.org/10.31234/osf.io/8udn5
 
-* The files associated with this version are:
-*           R notebook: Su-etal-2024.Rmd
-*           Su-etal-2024.html
-*           Data files:
-*                 Figure_1_2_PREE
-*             Figure_3_PREE_LowUS_10percent
+The files associated with this version are:
+-  R notebook: Su-etal-2024.Rmd
+-  Su-etal-2024.html
+-  Data files:
+-            Figure_1_2_PREE
+-        Figure_3_PREE_LowUS_10percent
 *         Figure_4B-C_OneFC
 *     Figure_4E-F_Interpolated Extinction
 
