@@ -21,6 +21,7 @@ library(pwr2)
 library(rstatix)
 library(viridis)
 library(gtsummary)
+library(htmltools)
 ```
 
 # Fig 1. Testing the effect of partial reinforcement in extinction learning:  
@@ -159,9 +160,13 @@ kable(nice_m1b1_FC1, caption = '<b>Figure 1.B1: FC1 Main FX</b>') %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 #Post-hoc analyses
-n1b1.1_FC1 <- emmeans(m1b1_FC1, ~ CS)
-n1b1.1_FC1_pairs<- pairs(n1b1.1_FC1, simple="each")
-kable(n1b1.1_FC1_pairs[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>')
+# n1b1.1_FC1 <- emmeans(m1b1_FC1, ~ CS)
+# n1b1.1_FC1_pairs<- pairs(n1b1.1_FC1, simple="each")
+# kbl(n1b1.1_FC1_pairs[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') %>% kable_minimal(full_width=F)
+
+n1b1.1_FC1 <- tidy(emmeans(m1b1_FC1, pairwise ~ CS)$contrasts)
+kbl(n1b1.1_FC1, caption="<b>Figure 1.B1: Simple contrasts for CS</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 #######################
 # Analysis of FC2 Data
@@ -181,9 +186,13 @@ kable(nice_m1b1_FC2, caption = '<b>Figure 1.B1: FC2 Main FX</b>') %>%
 
 #Post-hoc analyses
 #Contrast for CS
-n1b1.1_FC2 <- emmeans(m1b1_FC2, ~ CS)
-n1b1.1_pairs_FC2<- pairs(n1b1.1_FC2, simple="each")
-kable(n1b1.1_pairs_FC2[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') 
+ # n1b1.1_FC2 <- emmeans(m1b1_FC2, ~ CS)
+ # n1b1.1_pairs_FC2<- pairs(n1b1.1_FC2, simple="each")
+ # kable(n1b1.1_pairs_FC2[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') 
+
+n1b1.1_FC2 <- tidy(emmeans(m1b1_FC2, pairwise ~ CS)$contrasts)
+kbl(n1b1.1_FC2, caption="<b>Figure 1.B1: Simple contrasts for CS</b>'") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 ```
 
 ### B2. Between-Session FC
@@ -249,15 +258,20 @@ nice_m1c <-nice(m1c)
 kable(nice_m1c, caption = '<b>Figure 1C: Main FX</b>') %>% 
   kable_styling(bootstrap_options = "striped", full_width = F, position = "left", font_size = 14)
 
-#Post-hoc analyses
+# #Post-hoc analyses
 n1c <- emmeans(m1c, ~ Exp_Type * CS_dur)
 
 #Contrast for CS x FC Day interaction
 n1c_pairs<- pairs(n1c, simple="each")
 
-kable(n1c_pairs[1], caption = '<b>Figure 1C: Simple contrasts for CS-Epoch </b>')  
+n1c_Exp_Type<-tidy(n1c_pairs$`simple contrasts for Exp_Type`)
+kbl(n1c_Exp_Type, caption="<b>Figure 1C: Simple contrasts for CS-Epoch</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
-kable(n1c_pairs[2], caption = '<b>Figure 1C: Simple contrasts for CS duration</b>')  
+n1c_CSdur<-tidy(n1c_pairs$`simple contrasts for CS_dur`)
+kbl(n1c_CSdur, caption="<b>Figure 1C: Simple contrasts for CS duration</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
 ```
 
 ## D. Extinction Acquisition-----------------------------------------------
@@ -296,10 +310,14 @@ n1.d1.FE1 <- emmeans(m1.d1.FE1, ~ CS_dur * Bin)
 n1bd.1_pairs_FE1<- pairs(n1.d1.FE1, simple="each")
 
 ##Simple contrasts for Bin
-kable(n1bd.1_pairs_FE1[1], caption = '<b>Figure 1.D1-E1: Simple Contrasts for CS bin </b>')
+n1bd.1_pairs_FE1_bin<-tidy(n1bd.1_pairs_FE1$`simple contrasts for Bin`)
+kbl(n1bd.1_pairs_FE1_bin, caption="<b>Figure 1.D1-E1: Simple Contrasts for CS bin</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 ##Simple contrasts for CS Duration
-kable(n1bd.1_pairs_FE1[2], caption = '<b>Figure 1.D1: E1 Simple Contrasts by CS duration</b>')
+n1bd.1_pairs_FE1_CSdur<-tidy(n1bd.1_pairs_FE1$`simple contrasts for CS_dur`)
+kbl(n1bd.1_pairs_FE1_CSdur, caption="<b>Figure 1.D1: E1 Simple Contrasts by CS duration</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 ###### FE2 ############
 m1.d1.FE2 <- EXT_bin_id_1 %>%
@@ -320,10 +338,15 @@ kable(nice_m1.d1.FE2, caption = '<b>Figure 1.D1: E2 Main FX</b>') %>%
 n2.d1.FE2 <- emmeans(m1.d1.FE2, ~ Contingency * Bin)
 n2.d1.FE2_pairs<- pairs(n2.d1.FE2, simple="each")
 
-# #Simple contrasts
- kable(n2.d1.FE2_pairs[1], caption = '<b>Figure 1.D1: E2 Simple Contrasts by Contingency</b>')
- 
-kable(n2.d1.FE2_pairs[2], caption = '<b>Figure 1.D1: E2 Simple Contrasts by CS bin </b>')
+# #Simple contrasts  by Contingency
+n2.d1.FE2_pairs_contingency<-tidy(n2.d1.FE2_pairs$`simple contrasts for Contingency`)
+kbl(n2.d1.FE2_pairs_contingency, caption="<b>Figure 1.D1: E2 Simple Contrasts by Contingency</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
+
+# #Simple contrasts  by CS bin
+n2.d1.FE2_pairs_CSbin<-tidy(n2.d1.FE2_pairs$`simple contrasts for Bin`)
+kbl(n2.d1.FE2_pairs_CSbin, caption="<b>Figure 1.D1: E2 Simple Contrasts by CS Bin</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 ###### FE3 ############
 m1.d1.FE3 <- EXT_bin_id_1 %>%
@@ -346,16 +369,23 @@ n1.d1.FE3 <- emmeans(m1.d1.FE3, ~ Bin)
 n1.d1.FE3_pairs<- pairs(n1.d1.FE3, simple="each")
 
 #Simple contrasts for Bin
-kable(n1.d1.FE3_pairs[], caption = '<b>Figure 1.D1: E3 Simple Contrasts by CS bin</b>')
+n1.d1.FE3_pairs_CSbin<-tidy(n1.d1.FE3_pairs$`simple contrasts for Bin`)
+kbl(n1.d1.FE3_pairs_CSbin, caption="<b>igure 1.D1: E3 Simple Contrasts by CS bin</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 #Post-hoc model #2
 n2.d1.FE3 <- emmeans(m1.d1.FE3, ~ Contingency * CS_dur)
 n2.d1.FE3_pairs<- pairs(n2.d1.FE3, simple="each")
 
-#One sig effect. Not pertinent to hypothesis tested. 
-kable(n2.d1.FE3_pairs[1], caption = '<b>Figure 1.D1: E3 Simple Contrasts Contingency </b>')
+#Simple contrasts for Contingency
+n2.d1.FE3_pairs_Contingency<-tidy(n2.d1.FE3_pairs$`simple contrasts for Contingency`)
+kbl(n2.d1.FE3_pairs_Contingency, caption="<b>Figure 1.D1: E3 Simple Contrasts Contingency</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
-kable(n2.d1.FE3_pairs[2], caption = '<b>Figure 1.D1: E3 Simple Contrasts for CS_duration</b>')
+#Simple contrasts for CS Duration
+n2.d1.FE3_pairs_CSdur<-tidy(n2.d1.FE3_pairs$`simple contrasts for CS_dur`)
+kbl(n2.d1.FE3_pairs_CSdur, caption="<b>Figure 1.D1: E3 Simple Contrasts for CS_duration</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 ```
 
 ### D1. Comparing slope of FE acquisition using linear contrasts
@@ -451,12 +481,17 @@ kable(nice_m1.d2.FE, caption = '<b>Figure 1.D2: Main FX</b>') %>%
 
 #Post-hoc analyses
 n1.d2 <- emmeans(m1.d2.FE, ~ Exp_Type * CS_dur)
+n1.d2_pairs <- pairs(n1.d2, simple="each")
 
 #Simple contrasts for Extinction Day
-n1.d2_pairs <- pairs(n1.d2, simple="each")
-kable(n1.d2_pairs[1], caption = '<b>Figure 1.D2-E1:Simple Contrasts for FE Day</b>')
+n1.d2_pairs_FEday<-tidy(n1.d2_pairs$`simple contrasts for Exp_Type`)
+kbl(n1.d2_pairs_FEday, caption="<b>Figure 1.D2-E1:Simple Contrasts for FE Day</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
-kable(n1.d2_pairs[2], caption = '<b>Figure 1.D2-E1:Simple Contrasts for CS Duration</b>')
+#Simple contrasts for CS Duration
+n1.d2_pairs_CSdur<-tidy(n1.d2_pairs$`simple contrasts for CS_dur`)
+kbl(n1.d2_pairs_CSdur, caption="<b>Figure 1.D2-E1:Simple Contrasts for FE Day</b>") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 ```
 
 ## E. Extinction Recall-----------------------------------------------
