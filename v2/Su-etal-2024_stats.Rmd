@@ -2,6 +2,8 @@
 title: 'Statistics Tables for Su et al., (2024)'
 output:
   html_document:
+    toc: true
+    toc_float: true
     df_print: paged
 editor_options:
   chunk_output_type: console
@@ -23,6 +25,7 @@ library(viridis)
 library(gtsummary)
 library(htmltools)
 ```
+
 
 # Fig 1. Testing the effect of partial reinforcement in extinction learning:  
 ```{r echo=TRUE, results = 'hide', include=FALSE}
@@ -370,7 +373,7 @@ n1.d1.FE3_pairs<- pairs(n1.d1.FE3, simple="each")
 
 #Simple contrasts for Bin
 n1.d1.FE3_pairs_CSbin<-tidy(n1.d1.FE3_pairs$`simple contrasts for Bin`)
-kbl(n1.d1.FE3_pairs_CSbin, caption="<b>igure 1.D1: E3 Simple Contrasts by CS bin</b>") %>%
+kbl(n1.d1.FE3_pairs_CSbin, caption="<b>Figure 1.D1: E3 Simple Contrasts by CS bin</b>") %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "left")
 
 #Post-hoc model #2
