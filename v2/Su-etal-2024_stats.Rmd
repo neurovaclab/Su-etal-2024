@@ -20,6 +20,7 @@ library(emmeans)
 library(pwr2)
 library(rstatix)
 library(viridis)
+library(gtsummary)
 ```
 
 # Fig 1. Testing the effect of partial reinforcement in extinction learning:  
@@ -160,7 +161,7 @@ kable(nice_m1b1_FC1, caption = '<b>Figure 1.B1: FC1 Main FX</b>') %>%
 #Post-hoc analyses
 n1b1.1_FC1 <- emmeans(m1b1_FC1, ~ CS)
 n1b1.1_FC1_pairs<- pairs(n1b1.1_FC1, simple="each")
-kable(n1b1.1_FC1_pairs[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>') 
+kable(n1b1.1_FC1_pairs[1], caption = '<b>Figure 1.B1: Simple contrasts for CS</b>')
 
 #######################
 # Analysis of FC2 Data
