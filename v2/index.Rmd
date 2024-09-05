@@ -25,7 +25,11 @@ library(viridis)
 library(gtsummary)
 library(htmltools)
 ```
+# Su et al. (2024)
 
+This repository contains all the files and code used for the Su et al., (2024) manuscript titled: No effect of partial reinforcement on fear extinction learning and memory in C57BL/6J mice
+
+See the the readme file for information on the two versions of code and data. What follows are the statistics tables for each of the figures in the manuscript:
 
 # Fig 1. Testing the effect of partial reinforcement in extinction learning:  
 ```{r echo=TRUE, results = 'hide', include=FALSE}

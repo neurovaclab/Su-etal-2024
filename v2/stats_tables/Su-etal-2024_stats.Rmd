@@ -1,7 +1,6 @@
 ---
 title: 'Statistics Tables for Su et al., (2024)'
-output:
-  html_document:
+output: rmarkdown::github_document
     toc: true
     toc_float: true
     df_print: paged
